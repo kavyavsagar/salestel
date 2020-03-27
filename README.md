@@ -1,2 +1,2 @@
-# salestel
-Telecom sales management
+# Salestel
+Application for Telecom sales and agent management.
