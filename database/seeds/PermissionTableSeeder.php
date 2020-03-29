@@ -13,11 +13,11 @@ class PermissionTableSeeder extends Seeder
      */
     public function run()
     {
-       $permissions = [
-           'customer-list',
-           'customer-create',
-           'customer-edit',
-           'customer-delete',
+       $permissions = [           
+           'order-list',
+           'order-create',
+           'order-edit',
+           'order-delete',           
         ];
    
         foreach ($permissions as $permission) {
@@ -42,5 +42,13 @@ class PermissionTableSeeder extends Seeder
 //            'pricing-list',
 //            'pricing-create',
 //            'pricing-edit',
-//            'pricing-delete'
+//            'pricing-delete',
+//           'plan-list',
+//           'plan-create',
+//           'plan-edit',
+//           'plan-delete',
+//            'customer-list',
+//            'customer-create',
+//            'customer-edit',
+//            'customer-delete',
 //         ];
