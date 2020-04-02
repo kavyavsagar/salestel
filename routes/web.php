@@ -13,10 +13,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
 
+Route::get('/', 'Auth\LoginController@showLoginForm');
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
@@ -29,8 +30,11 @@ Route::group(['middleware' => ['auth']], function() {
     Route::resource('plan', 'PlanController'); 
     Route::resource('customer','CustomerController');
     Route::resource('order','OrderController');
-
+    Route::resource('complaint','ComplaintController');
+    
     Route::get('/ajxcustomer/{id}', 'CustomerController@getCustomer')->name('ajxcustomer');
     Route::post('order/changestatus', 'OrderController@changeStatus')->name('order.changestatus');
     Route::post('/updateOrder', 'OrderController@update')->name('order.updateOrder');
+    Route::get('/ordercomplete', 'OrderController@completed')->name('order.complete');
+    Route::post('complaint/changestatus', 'ComplaintController@changeStatus')->name('complaint.changestatus');
 });

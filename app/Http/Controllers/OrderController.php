@@ -45,9 +45,40 @@ class OrderController extends Controller
             ->join('customers', 'customers.id', '=', 'orders.customer_id')
             ->join('users', 'users.id', '=', 'customers.refferedby')
             ->select('order_statuses.name AS status','customers.company_name', 'users.fullname', 'orders.total_amount', 'orders.created_at', 'orders.id', 'orders.plan_type')
-            ->paginate(15);
+            ->orderBy('orders.id', 'DESC')
+            ->paginate(10);
 
         return view('order.index',compact('data'))
+            ->with('i', ($request->input('page', 1) - 1) * 10);
+    }
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function completed(Request $request)
+    {
+
+        $currentMonth = date('m');
+         $input = $request->all();
+
+         print_r($input);
+
+
+
+        $data = DB::table('orders')
+            ->join('order_statuses', 'order_statuses.id', '=', 'orders.order_status_id')
+            ->join('customers', 'customers.id', '=', 'orders.customer_id')
+            ->join('users', 'users.id', '=', 'customers.refferedby')
+            ->select('order_statuses.name AS status','customers.company_name', 'users.fullname', 'orders.total_amount', 'orders.created_at', 'orders.id', 'orders.plan_type')
+            ->where('orders.order_status_id','=', 13)
+            ->whereRaw('MONTH(st_orders.created_at) = ?',[$currentMonth])
+            ->orderBy('orders.id', 'DESC')
+            ->paginate(10);
+
+        $users = User::all()->pluck('fullname', 'id')->toArray();     
+
+        return view('order.complete',compact('data', 'users'))
             ->with('i', ($request->input('page', 1) - 1) * 10);
     }
 

@@ -2,56 +2,104 @@
 
 
 @section('content')
-<div class="row">
-    <div class="col-lg-12 margin-tb">
-        <div class="pull-left">
-            <h2>Orders</h2>
-        </div>
-        <div class="pull-right">
-            <a class="btn btn-success" href="{{ route('order.create') }}"> Create New Order</a>
-        </div>
+<!-- Content Header (Page header) -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Orders</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="{{ url('/') }}">Home</a></li>
+          <li class="breadcrumb-item active">Orders</li>
+        </ol>
+      </div>
     </div>
-</div>
+  </div><!-- /.container-fluid -->
+</section>
 
 
-@if ($message = Session::get('success'))
-<div class="alert alert-success">
-  <p>{{ $message }}</p>
-</div>
-@endif
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col">
 
+        <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Order Management</h3>
+          @can('order-create')
+            <a class="btn bg-gradient-success btn-sm float-right" href="{{ route('order.create') }}">CREATE NEW</a>
+          @endcan
+        </div>
+        <!-- /.card-header -->
+        <div class="card-body">
+          @if ($message = Session::get('success'))
+            <div class="alert alert-success">
+                <p>{{ $message }}</p>
+            </div>
+          @endif
+          <table id="order-tbl" class="table table-bordered table-hover">
+            <thead>
+            <tr>
+               <th>OrderId</th>
+               <th>Customer</th>
+               <th>Status</th>
+               <th>Total</th>
+               <th>Reffered By</th>
+               <th>Created At</th>
+               <th>Action</th>                     
+            </tr>
+            </thead>
+            <tbody> 
+             @foreach ($data as $key => $order)
+              <tr>
+                <td>{{ $order->id }}</td>
+                <td>{{ $order->company_name }}</td>
+                <td>{{ ucfirst(str_replace("_", " ", $order->status)) }}</td>
+                <td>
+                <span class="gray" title="{{ ucfirst($order->plan_type) }}"><i class="fas {{ ($order->plan_type == 'mobile') ? 'fa-mobile-alt' : 'fa-phone-alt' }}"></i></span>&nbsp; {{ $order->total_amount }} </td>
+                <td>{{ $order->fullname }}</td>
+                <td>{{ date("Y-m-d",strtotime($order->created_at)) }}</td>
+                <td>
+                   <a class="btn" href="{{  route('order.show',$order->id) }}" title="View Orders"><i class="fas fa-eye"></i></a>
+                  @can('order-edit')
+                   <a class="btn" href="{{ route('order.edit',$order->id) }}" title="Edit"><i class="fas fa-edit"></i></a>
+                  @endcan 
+                  @can('customer-delete')
+                  {!! Form::open(['method' => 'DELETE','route' => ['order.destroy', $order->id],'style'=>'display:inline']) !!}
+                    <button type="submit" class="btn" title="Delete"><i class="fas fa-trash"></i></button>
+                  {!! Form::close() !!}
+                @endcan
+                </td>
+              </tr>
+             @endforeach           
+            </tbody>
+            <tfoot>
+            <tr>
+               <th>OrderId</th>
+               <th>Customer</th>
+               <th>Status</th>
+               <th>Total</th>
+               <th>Reffered By</th>
+               <th>Created At</th>
+               <th>Action</th>             
+            </tr>
+            </tfoot>
+          </table>
+          <div class="float-right"> {!! $data->render() !!}</div>
+        </div>
+        <!-- /.card-body -->
+        </div>
+        <!-- /.card -->
+      </div>
+      <!-- <div class="col">&nbsp;</div> -->
+    </div>
+  </div>
+</section> 
+<!-- /.content -->
 
-<table class="table table-bordered">
- <tr>
-   <th>OrderId</th>
-   <th>Customer</th>
-   <th>Status</th>
-   <th>Total</th>
-   <th>Reffered By</th>
-   <th>Created At</th>
-   <th width="280px">Action</th>
- </tr>
- @foreach ($data as $key => $order)
-  <tr>
-    <td>{{ $order->id }}</td>
-    <td>{{ $order->company_name }}</td>
-    <td>{{ ucfirst(str_replace("_", " ", $order->status)) }}</td>
-    <td>{{ $order->total_amount }} <small class="gray">[{{ ucfirst($order->plan_type) }}]</small></td>
-    <td>{{ $order->fullname }}</td>
-    <td>{{ date("Y-m-d",strtotime($order->created_at)) }}</td>
-    <td>
-       <a class="btn btn-info" href="{{ route('order.show',$order->id) }}">Show</a>
-       <a class="btn btn-primary" href="{{ route('order.edit',$order->id) }}">Edit</a>
-        {!! Form::open(['method' => 'DELETE','route' => ['order.destroy', $order->id],'style'=>'display:inline']) !!}
-            {!! Form::submit('Delete', ['class' => 'btn btn-danger']) !!}
-        {!! Form::close() !!}
-    </td>
-  </tr>
- @endforeach
-</table>
-
-
-{!! $data->render() !!}
 
 
 @endsection

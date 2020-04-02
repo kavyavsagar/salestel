@@ -2,43 +2,68 @@
 
 
 @section('content')
-<div class="row">
-    <div class="col-lg-12 margin-tb">
-        <div class="pull-left">
-            <h2>Create New Order Status</h2>
-        </div>
-        <div class="pull-right">
-            <a class="btn btn-primary" href="{{ route('orderstatus.index') }}"> Back</a>
-        </div>
+
+<!-- Content Header (Page header) -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Create Order Status</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="{{ url('/') }}">Home</a></li>
+          <li class="breadcrumb-item"><a href="{{ route('orderstatus.index') }}">Order Status</a></li>
+          <li class="breadcrumb-item active">Create Order Status</li>
+        </ol>
+      </div>
     </div>
-</div>
+  </div><!-- /.container-fluid -->
+</section>
 
-
-@if (count($errors) > 0)
-  <div class="alert alert-danger">
-    <strong>Whoops!</strong> There were some problems with your input.<br><br>
-    <ul>
-       @foreach ($errors->all() as $error)
-         <li>{{ $error }}</li>
-       @endforeach
-    </ul>
-  </div>
-@endif
-
-{!! Form::open(array('route' => 'orderstatus.store','method'=>'POST')) !!}
-<div class="row">
-    <div class="col-xs-12 col-sm-12 col-md-12">
-        <div class="form-group">
-            <strong>Status Name:</strong>
-            {!! Form::text('name', null, array('placeholder' => 'Status Name','class' => 'form-control')) !!}
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <!-- left column -->
+     
+      <div class="col">
+        <!-- general form elements -->
+        <div class="card card-primary">
+          <div class="card-header">
+            <h3 class="card-title">New Status</h3>
+          </div>
+          <!-- /.card-header -->
+          <!-- form start -->
+          {!! Form::open(array('route' => 'orderstatus.store','method'=>'POST')) !!}
+            <div class="card-body">
+                @if (count($errors) > 0)
+                <div class="alert alert-danger">
+                    <strong>Whoops!</strong> There were some problems with your input.<br><br>
+                    <ul>
+                       @foreach ($errors->all() as $error)
+                         <li>{{ $error }}</li>
+                       @endforeach
+                    </ul>
+                </div>
+                @endif
+                <div class="form-group">
+                    <label for="status-name">Status Name</label>
+                    {!! Form::text('name', null, array('placeholder' => 'Status Name','class' => 'form-control', 'id' => 'status-name')) !!}
+                </div> 
+            </div>
+            <!-- /.card-body -->
+            <div class="card-footer">
+              <button type="submit" class="btn btn-primary">Submit</button>
+              <a class="btn btn-default float-right" href="{{ route('orderstatus.index') }}"> Cancel</a>
+            </div>
+          {!! Form::close() !!}
         </div>
+        <!-- /.card -->
     </div>
-
-    <div class="col-xs-12 col-sm-12 col-md-12 text-center">
-        <button type="submit" class="btn btn-primary">Submit</button>
+    
     </div>
-</div>
-{!! Form::close() !!}
-
+    </div>
+</section>
 
 @endsection

@@ -1,0 +1,12 @@
+.login-logo img{
+	width: 100%;
+}
+.ts-menu-item i{
+	margin-right: 1em;
+}
+.mht-100{
+	max-height: 150px;
+}
+.table-hover tbody tr:hover {
+    background-color: #cfdae8;
+}

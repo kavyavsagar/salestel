@@ -2,323 +2,376 @@
 
 
 @section('content')
-<div class="row">
-    <div class="col-lg-12 margin-tb">
-        <div class="pull-left">
-            <h2>Place an Order</h2>
-        </div>
-        <div class="pull-right">
-            <a class="btn btn-primary" href="{{ route('order.index') }}"> Back</a>
-        </div>
+<!-- Content Header (Page header) -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Place an Order</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="{{ url('/') }}">Home</a></li>
+          <li class="breadcrumb-item"><a href="{{ route('order.index') }}">Order</a></li>
+          <li class="breadcrumb-item active">Place an Order</li>
+        </ol>
+      </div>
     </div>
-</div>
+  </div><!-- /.container-fluid -->
+</section>
 
-@if (count($errors) > 0)
-  <div class="alert alert-danger">
-    <strong>Whoops!</strong> There were some problems with your input.<br><br>
-    <ul>
-       @foreach ($errors->all() as $error)
-         <li>{{ $error }}</li>
-       @endforeach
-    </ul>
-  </div>
-@endif
-<form method="post" id="order_placed" enctype="multipart/form-data">
-<nav>
-  <div class="nav nav-tabs" id="nav-tab" role="tablist">
-    <a class="nav-item nav-link active" id="nav-customer-tab" data-toggle="tab" href="#nav-customer" role="tab" aria-controls="nav-customer" aria-selected="true">Customer</a>
-    <a class="nav-item nav-link" id="nav-mobile-tab" data-toggle="tab" href="#nav-mobile" role="tab" aria-controls="nav-mobile" aria-selected="true">Mobile</a>
-    <a class="nav-item nav-link" id="nav-fixed-tab" data-toggle="tab" href="#nav-fixed" role="tab" aria-controls="nav-fixed" aria-selected="false">Fixed</a>
-    <a class="nav-item nav-link" id="nav-status-tab" data-toggle="tab" href="#nav-status" role="tab" aria-controls="nav-status" aria-selected="false">Status</a>
-  </div>
-</nav>
-<div class="tab-content" id="nav-tabContent">
-    <!-- CUSTOMER -->
-    <div class="tab-pane fade show active" id="nav-customer" role="tabpanel" aria-labelledby="nav-customer-tab">
-        <div class="row"><div class="col-xs-12 col-sm-12 col-md-12"><br></div></div>
-        <div class="row">
-            <div class="col-xs-12 col-sm-4 col-md-4">
-                <div class="form-group">
-                    <strong>Customer:</strong>
-                    <select class="form-control" name="customerid" id="customerid">   
-                    <option value="0">-- None --</option>                
-                    @foreach ($customers as $key => $value)
-                      <option value="{{ $key }}"> 
-                        {{ $value }} 
-                        </option>
-                    @endforeach    
-                </select>
-                </div>
-            </div> 
-            <div class="col-xs-12 col-sm-4 col-md-4">
-                <div class="form-group">
-                    <strong>Company Name:</strong>
-                    {!! Form::text('company_name', null, array('placeholder' => 'Company Name','class' => 'form-control')) !!}
-                </div>
-            </div>    
-            <div class="col-xs-12 col-sm-4 col-md-4">
-                <div class="form-group">
-                    <strong>Location:</strong>
-                    {!! Form::text('location', null, array('placeholder' => 'Location','class' => 'form-control')) !!}
-                </div>
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <!-- left column -->
+     
+      <div class="col">
+        <!-- general form elements -->
+        <div class="card card-primary card-outline card-outline-tabs">     
+          <div class="card-header p-0 border-bottom-0">
+            <ul class="nav nav-tabs" id="nav-tab" role="tablist">
+                <li class="nav-item">
+                <a class="nav-link active" id="nav-customer-tab" data-toggle="pill" href="#nav-customer" role="tab" aria-controls="nav-customer" aria-selected="true">Customer</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link" id="nav-mobile-tab" data-toggle="pill" href="#nav-mobile" role="tab" aria-controls="nav-mobile" aria-selected="false">Mobile</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link"  id="nav-fixed-tab" data-toggle="pill" href="#nav-fixed" role="tab" aria-controls=""" aria-selected="false">Fixed</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link" id="nav-status-tab" data-toggle="pill" href="#nav-status" role="tab" aria-controls="nav-status" aria-selected="false">Status</a>
+            </ul>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body">
+            @if (count($errors) > 0)
+            <div class="alert alert-danger">
+                <strong>Whoops!</strong> There were some problems with your input.<br><br>
+                <ul>
+                   @foreach ($errors->all() as $error)
+                     <li>{{ $error }}</li>
+                   @endforeach
+                </ul>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-12 col-sm-12 col-md-12">
-                <strong class="text-uppercase">Authorized Person Details</strong>
-                <hr/>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-12 col-sm-4 col-md-4">
-                <div class="form-group">
-                    <strong>Person Name:</strong>
-                    {!! Form::text('authority_name', null, array('placeholder' => 'Authority Name','class' => 'form-control')) !!}
+            @endif
+            <!-- form start -->   
+            <form method="post" id="order_placed" enctype="multipart/form-data">
+  
+            <div class="tab-content" id="nav-tabContent">
+                <!-- CUSTOMER -->
+                <div class="tab-pane fade show active" id="nav-customer" role="tabpanel" aria-labelledby="nav-customer-tab">
+                    <div class="row"><div class="col-xs-12 col-sm-12 col-md-12"><br></div></div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-4 col-md-4">
+                            <div class="form-group">
+                                <label>Customer (existing):</label>
+                                <select class="form-control" name="customerid" id="customerid">   
+                                <option value="0">-- None --</option>                
+                                @foreach ($customers as $key => $value)
+                                  <option value="{{ $key }}"> 
+                                    {{ $value }} 
+                                    </option>
+                                @endforeach    
+                            </select>
+                            </div>
+                        </div> 
+                        <div class="col-xs-12 col-sm-4 col-md-4">
+                            <div class="form-group">
+                                <label>Company Name:</label>
+                                {!! Form::text('company_name', null, array('placeholder' => 'Company Name','class' => 'form-control')) !!}
+                            </div>
+                        </div>    
+                        <div class="col-xs-12 col-sm-4 col-md-4">
+                            <div class="form-group">
+                                <label>Location:</label>
+                                {!! Form::text('location', null, array('placeholder' => 'Location','class' => 'form-control')) !!}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-md-12">
+                            <strong class="text-uppercase">Authorized Person Details</strong>
+                            <hr/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-4 col-md-4">
+                            <div class="form-group">
+                                <label>Person Name:</label>
+                                {!! Form::text('authority_name', null, array('placeholder' => 'Authority Name','class' => 'form-control')) !!}
+                            </div>
+                        </div>      
+                        <div class="col-xs-12 col-sm-4 col-md-4">
+                            <div class="form-group">
+                                <label>Email:</label>
+                                {!! Form::text('authority_email', null, array('placeholder' => 'Authority Email','class' => 'form-control')) !!}
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-4">
+                            <div class="form-group">
+                                <label>Mobile</label>
+                                {!! Form::text('authority_phone', null, array('placeholder' => 'Authority Mobile','class' => 'form-control')) !!}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-md-12">
+                            <strong class="text-uppercase">Technical Person Details</strong>
+                            <hr/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-4 col-md-4">
+                            <div class="form-group">
+                                <label>Contact Name:</label>
+                                {!! Form::text('technical_name', null, array('placeholder' => 'Technical Name','class' => 'form-control')) !!}
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-4">
+                            <div class="form-group">
+                                <label>Email:</label>
+                                {!! Form::text('technical_email', null, array('placeholder' => 'Technical Email','class' => 'form-control')) !!}
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-4">
+                            <div class="form-group">
+                                <label>Mobile</label>
+                                {!! Form::text('technical_phone', null, array('placeholder' => 'Technical Mobile','class' => 'form-control')) !!}
+                            </div>
+                        </div>  
+                    </div>
+                    <div class="row"> 
+                        <div class="col-xs-12 col-sm-6 col-md-6">
+                            <div class="form-group">
+                            <label>Reffered By:</label>
+                            <select class="form-control" name="refferedby">   
+                                <option value="0">-- Select --</option>                
+                                @foreach ($users as $key => $value)
+                                  <option value="{{ $key }}"> 
+                                    {{ $value }} 
+                                  </option>
+                                @endforeach    
+                            </select>            
+                            </div>
+                        </div>        
+                        <div class="col-xs-12 col-sm-6 col-md-6"> 
+                            <div class="form-group">
+                                <label>Upload all documents:</label>
+                                <div class="input-group">
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" id="file-input" name="image[]" multiple="">
+                                        <label class="custom-file-label" for="file-input">Choose file</label>
+                                    </div>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" id="">Upload</span>
+                                    </div>
+                                </div>
+                                <span class="text-danger">{{ $errors->first('image') }}</span>           
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">       
+                        <div class="col-xs-12 col-sm-12 col-md-12"> <div id="thumb-output"></div></div>
+                    </div>
+                    <div class="row">       
+                        <div class="col-xs-12 col-sm-12 col-md-12">
+                            <div class="form-group float-right">
+                                <button type="button" class="btn btn-outline-primary btnNext" data-id="mobile">Continue</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>      
-            <div class="col-xs-12 col-sm-4 col-md-4">
-                <div class="form-group">
-                    <strong>Email:</strong>
-                    {!! Form::text('authority_email', null, array('placeholder' => 'Authority Email','class' => 'form-control')) !!}
-                </div>
-            </div>
-            <div class="col-xs-12 col-sm-4 col-md-4">
-                <div class="form-group">
-                    <strong>Mobile</strong>
-                    {!! Form::text('authority_phone', null, array('placeholder' => 'Authority Mobile','class' => 'form-control')) !!}
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-12 col-sm-12 col-md-12">
-                <strong class="text-uppercase">Technical Person Details</strong>
-                <hr/>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-12 col-sm-4 col-md-4">
-                <div class="form-group">
-                    <strong>Contact Name:</strong>
-                    {!! Form::text('technical_name', null, array('placeholder' => 'Technical Name','class' => 'form-control')) !!}
-                </div>
-            </div>
-            <div class="col-xs-12 col-sm-4 col-md-4">
-                <div class="form-group">
-                    <strong>Email:</strong>
-                    {!! Form::text('technical_email', null, array('placeholder' => 'Technical Email','class' => 'form-control')) !!}
-                </div>
-            </div>
-            <div class="col-xs-12 col-sm-4 col-md-4">
-                <div class="form-group">
-                    <strong>Mobile</strong>
-                    {!! Form::text('technical_phone', null, array('placeholder' => 'Technical Mobile','class' => 'form-control')) !!}
-                </div>
-            </div>  
-        </div>
-        <div class="row"> 
-            <div class="col-xs-12 col-sm-6 col-md-6">
-                <div class="form-group">
-                <strong>Reffered By:</strong>
-                <select class="form-control" name="refferedby">   
-                    <option value="0">-- Select --</option>                
-                    @foreach ($users as $key => $value)
-                      <option value="{{ $key }}"> 
-                        {{ $value }} 
-                      </option>
-                    @endforeach    
-                </select>            
-                </div>
-            </div>        
-            <div class="col-xs-12 col-sm-6 col-md-6"> 
-                <div class="form-group">
-                    <strong>Upload all documents:</strong>
-                    <input type="file" id="file-input" name="image[]" multiple="" placeholder="Choose documents" class="form-control">
-                    <span class="text-danger">{{ $errors->first('image') }}</span>                   
-                </div>        
-            </div>
-        </div>
-        <div class="row">       
-            <div class="col-xs-12 col-sm-12 col-md-12"> <div id="thumb-output"></div></div>
-        </div>
-        <div class="row">       
-            <div class="col-xs-12 col-sm-12 col-md-12">
-                <div class="form-group float-right">
-                    <button type="button" class="btn btn-primary btnNext" data-id="mobile">Continue</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!--  MOBILE -->
-    <div class="tab-pane fade show" id="nav-mobile" role="tabpanel" aria-labelledby="nav-mobile-tab">
-        <div class="row">
-            <div class="col-xs-12 col-sm-12 col-md-12">
-              <div id="frmmobile">&nbsp;</div>
+                <!--  MOBILE -->
+                <div class="tab-pane fade show" id="nav-mobile" role="tabpanel" aria-labelledby="nav-mobile-tab">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-md-12">
+                          <div id="frmmobile">&nbsp;</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-3 col-md-3">
+                        <div class="form-group">
+                            <select class="form-control" name="mobile_price" id="mprice"> 
+                                <option value="">--MRC--</option>
+                                @foreach ($mob_prices as $key => $value) 
+                                <option value="{{ $value }}"> 
+                                    {{ $value }} 
+                                </option>
+                                @endforeach    
+                            </select>          
+                        </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-4">
+                        <div class="form-group">
+                            <select class="form-control" name="mobile_plan" id="mplan"> 
+                                <option value="">--PLANS--</option>
+                                @foreach ($mob_plans as $key => $value) 
+                                <option value="{{ $key }}-{{ $value }}"> 
+                                    {{ $value }} 
+                                </option>
+                                @endforeach    
+                            </select>
+                        </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-2 col-md-2">
+                            <div class="form-group">
+                                <input type="number" name="mquantity" id="mqty" class="form-control" placeholder="Quantity"/>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-3 col-md-3">
+                            <div class="form-group">
+                                <button type="button" class="btn btn-primary" id="mobile-add">Add New</button>
+                            </div>
+                        </div>
+                    </div>   
+                    <div class="table-responsive p-0">
+                    <table class="table table-striped table-hover text-nowrap" id="tbl-mob-plans">
+                          <thead>
+                            <tr>
+                              <th scope="col">MRC</th>
+                              <th scope="col">PLAN</th>
+                              <th scope="col">QTY</th>
+                              <th scope="col">TOTAL (AED)</th>
+                              <th scope="col">ACTION</th>
+                            </tr>
+                          </thead>
+                          <tbody>                
+                          </tbody>
+                    </table>
+                    </div>
+                    <div class="row">       
+                        <div class="col-xs-12 col-sm-12 col-md-12">
+                            <div class="form-group float-right">
+                                <button type="button" class="btn btn-outline-secondary btnPrevious mr-1" data-id="customer">Previous</button>
+                                <button type="button" class="btn btn-outline-primary btnNext" data-id="fixed">Continue</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--  FIXED -->
+                <div class="tab-pane fade" id="nav-fixed" role="tabpanel" aria-labelledby="nav-fixed-tab">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-md-12">
+                          <div id="frmfixed">&nbsp;</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-3 col-md-3">
+                        <div class="form-group">
+                            <select class="form-control" name="fixed_price" id="fprice"> 
+                                <option value="">--MRC--</option>
+                                @foreach ($fxd_prices as $key => $value) 
+                                <option value="{{ $value }}"> 
+                                    {{ $value }} 
+                                </option>
+                                @endforeach    
+                            </select>          
+                        </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-4">
+                        <div class="form-group">
+                            <select class="form-control" name="fixed_plan" id="fplan"> 
+                                <option value="">--PLANS--</option>
+                                @foreach ($fxd_plans as $key => $value) 
+                                <option value="{{ $key }}-{{ $value }}"> 
+                                    {{ $value }} 
+                                </option>
+                                @endforeach    
+                            </select>
+                        </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-2 col-md-2">
+                            <div class="form-group">
+                                <input type="number" name="fquantity" id="fqty" class="form-control" placeholder="Quantity"/>                
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-3 col-md-3">
+                            <div class="form-group">
+                                <button type="button" class="btn btn-primary" id="fixed-add">Add New</button>
+                            </div>
+                        </div>
+                    </div>   
+                    <div class="table-responsive p-0">
+                    <table class="table table-striped table-hover text-nowrap" id="tbl-fxd-plans">
+                          <thead>
+                            <tr>
+                              <th scope="col">MRC</th>
+                              <th scope="col">PLAN</th>
+                              <th scope="col">QTY</th>
+                              <th scope="col">TOTAL (AED)</th>
+                              <th scope="col">ACTION</th>
+                            </tr>
+                          </thead>
+                          <tbody>                
+                          </tbody>
+                    </table>
+                    </div>
+                    <div class="row">       
+                        <div class="col-xs-12 col-sm-12 col-md-12">
+                            <div class="form-group float-right">
+                                <button type="button" class="btn btn-outline-secondary btnPrevious mr-1" data-id="mobile">Previous</button>
+                                <button type="button" class="btn btn-outline-primary btnNext" data-id="status">Continue</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="nav-status" role="tabpanel" aria-labelledby="nav-status-tab">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-md-12">
+                          <div id="frmstatus">&nbsp;</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-3 col-md-3">
+                        <div class="form-group">
+                            <select class="form-control" name="order_status" id="ostatus">                 
+                                @foreach ($ordstatus as $key => $value) 
+                                <option value="{{ $key }}"> 
+                                    {{ ucwords(str_replace("_"," ",$value)) }} 
+                                </option>
+                                @endforeach    
+                            </select>          
+                        </div>
+                        </div>   
+                        <div class="col-xs-12 col-sm-3 col-md-3">
+                            <div class="form-group">
+                                <textarea name="comments" id="comments" class="form-control" placeholder="Enter comments"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-2 col-md-2">
+                            <!-- <div class="form-group">
+                                <input type="text" name="leadno" id="leadno" class="form-control" placeholder="Lead No"/>                
+                            </div> -->
+                        </div>
+                    </div>   
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-md-12">
+                            <div class="form-group float-right">
+                                <button type="button" class="btn btn-outline-secondary btnPrevious mr-1" data-id="fixed">Previous</button>
+                                <button type="submit" class="btn btn-outline-success btn-submit">Confirm & Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+            </form>           
+          </div>
+            <!-- /.card-body -->
+          <div class="card-footer">
+              <a class="btn btn-default float-right" href="{{ route('order.index') }}"> Cancel</a>
+          </div>          
         </div>
-        <div class="row">
-            <div class="col-xs-12 col-sm-3 col-md-3">
-            <div class="form-group">
-                <select class="form-control" name="mobile_price" id="mprice"> 
-                    <option value="">--MRC--</option>
-                    @foreach ($mob_prices as $key => $value) 
-                    <option value="{{ $value }}"> 
-                        {{ $value }} 
-                    </option>
-                    @endforeach    
-                </select>          
-            </div>
-            </div>
-            <div class="col-xs-12 col-sm-4 col-md-4">
-            <div class="form-group">
-                <select class="form-control" name="mobile_plan" id="mplan"> 
-                    <option value="">--PLANS--</option>
-                    @foreach ($mob_plans as $key => $value) 
-                    <option value="{{ $key }}-{{ $value }}"> 
-                        {{ $value }} 
-                    </option>
-                    @endforeach    
-                </select>
-            </div>
-            </div>
-            <div class="col-xs-12 col-sm-2 col-md-2">
-                <div class="form-group">
-                    <input type="number" name="mquantity" id="mqty" class="form-control" placeholder="Quantity"/>
-                </div>
-            </div>
-            <div class="col-xs-12 col-sm-3 col-md-3">
-                <div class="form-group">
-                    <button type="button" class="btn btn-primary" id="mobile-add">Add New</button>
-                </div>
-            </div>
-        </div>   
-        <table class="table table-striped" id="tbl-mob-plans">
-              <thead>
-                <tr>
-                  <th scope="col">MRC</th>
-                  <th scope="col">PLAN</th>
-                  <th scope="col">QTY</th>
-                  <th scope="col">TOTAL (AED)</th>
-                  <th scope="col">ACTION</th>
-                </tr>
-              </thead>
-              <tbody>                
-              </tbody>
-        </table>
-        <div class="row">       
-            <div class="col-xs-12 col-sm-12 col-md-12">
-                <div class="form-group float-right">
-                    <button type="button" class="btn btn-secondary btnPrevious mr-1" data-id="customer">Previous</button>
-                    <button type="button" class="btn btn-primary btnNext" data-id="fixed">Continue</button>
-                </div>
-            </div>
-        </div>
+        <!-- /.card -->
     </div>
-    <!--  FIXED -->
-    <div class="tab-pane fade" id="nav-fixed" role="tabpanel" aria-labelledby="nav-fixed-tab">
-        <div class="row">
-            <div class="col-xs-12 col-sm-12 col-md-12">
-              <div id="frmfixed">&nbsp;</div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-12 col-sm-3 col-md-3">
-            <div class="form-group">
-                <select class="form-control" name="fixed_price" id="fprice"> 
-                    <option value="">--MRC--</option>
-                    @foreach ($fxd_prices as $key => $value) 
-                    <option value="{{ $value }}"> 
-                        {{ $value }} 
-                    </option>
-                    @endforeach    
-                </select>          
-            </div>
-            </div>
-            <div class="col-xs-12 col-sm-4 col-md-4">
-            <div class="form-group">
-                <select class="form-control" name="fixed_plan" id="fplan"> 
-                    <option value="">--PLANS--</option>
-                    @foreach ($fxd_plans as $key => $value) 
-                    <option value="{{ $key }}-{{ $value }}"> 
-                        {{ $value }} 
-                    </option>
-                    @endforeach    
-                </select>
-            </div>
-            </div>
-            <div class="col-xs-12 col-sm-2 col-md-2">
-                <div class="form-group">
-                    <input type="number" name="fquantity" id="fqty" class="form-control" placeholder="Quantity"/>                
-                </div>
-            </div>
-            <div class="col-xs-12 col-sm-3 col-md-3">
-                <div class="form-group">
-                    <button type="button" class="btn btn-primary" id="fixed-add">Add New</button>
-                </div>
-            </div>
-        </div>   
-        <table class="table table-striped" id="tbl-fxd-plans">
-              <thead>
-                <tr>
-                  <th scope="col">MRC</th>
-                  <th scope="col">PLAN</th>
-                  <th scope="col">QTY</th>
-                  <th scope="col">TOTAL (AED)</th>
-                  <th scope="col">ACTION</th>
-                </tr>
-              </thead>
-              <tbody>                
-              </tbody>
-        </table>
-        <div class="row">       
-            <div class="col-xs-12 col-sm-12 col-md-12">
-                <div class="form-group float-right">
-                    <button type="button" class="btn btn-secondary btnPrevious mr-1" data-id="mobile">Previous</button>
-                    <button type="button" class="btn btn-primary btnNext" data-id="status">Continue</button>
-                </div>
-            </div>
-        </div>
+    
     </div>
-    <div class="tab-pane fade" id="nav-status" role="tabpanel" aria-labelledby="nav-status-tab">
-        <div class="row">
-            <div class="col-xs-12 col-sm-12 col-md-12">
-              <div id="frmstatus">&nbsp;</div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-12 col-sm-3 col-md-3">
-            <div class="form-group">
-                <select class="form-control" name="order_status" id="ostatus">                 
-                    @foreach ($ordstatus as $key => $value) 
-                    <option value="{{ $key }}"> 
-                        {{ ucwords(str_replace("_"," ",$value)) }} 
-                    </option>
-                    @endforeach    
-                </select>          
-            </div>
-            </div>   
-            <div class="col-xs-12 col-sm-3 col-md-3">
-                <div class="form-group">
-                    <textarea name="comments" id="comments" class="form-control" placeholder="Enter comments"></textarea>
-                </div>
-            </div>
-            <div class="col-xs-12 col-sm-2 col-md-2">
-                <!-- <div class="form-group">
-                    <input type="text" name="leadno" id="leadno" class="form-control" placeholder="Lead No"/>                
-                </div> -->
-            </div>
-        </div>   
-        <div class="row">
-            <div class="col-xs-12 col-sm-12 col-md-12">
-                <div class="form-group float-right">
-                    <button type="button" class="btn btn-secondary btnPrevious mr-1" data-id="fixed">Previous</button>
-                    <button type="submit" class="btn btn-primary btn-submit">Confirm & Save</button>
-                </div>
-            </div>
-        </div>
     </div>
-</div>
-</form>
+</section>
+
+
 
 
 <script type="text/javascript">    
@@ -352,7 +405,7 @@ $(document).ready(function(){
 
         let mobd = JSON.stringify({"price": price, "planid": parseInt(plan[0]), "plan": plan[1], "qty": qty, "total": total});        
 
-        let tblrow = '<tr id="mrw-'+rowCounter+'"><th scope="row">'+ price +'</th><td>'+ plan[1] +'</td><td>'+ qty +'</td><td>'+total +'</td><td><span id="inplan'+rowCounter+'" class="d-none">'+mobd+'</span><a href="javascript:void(0);" class="del-mrow" data-id="'+rowCounter+'">Delete</a></td></tr>';
+        let tblrow = '<tr id="mrw-'+rowCounter+'"><th scope="row">'+ price +'</th><td>'+ plan[1] +'</td><td>'+ qty +'</td><td>'+total +'</td><td><span id="inplan'+rowCounter+'" class="d-none">'+mobd+'</span><a href="javascript:void(0);" class="del-mrow" data-id="'+rowCounter+'" title="Delete"><i class="fas fa-trash"></i></a></td></tr>';
 
         if(price && plan &&  qty){
             $('#tbl-mob-plans tbody').append(tblrow);     
@@ -399,7 +452,7 @@ $(document).ready(function(){
 
         let fixd = JSON.stringify({"price": price, "planid": parseInt(plan[0]), "plan": plan[1], "qty": qty, "total": total});        
 
-        let tblrow = '<tr id="frw-'+rowFCounter+'"><th scope="row">'+ price +'</th><td>'+ plan[1] +'</td><td>'+ qty +'</td><td>'+total +'</td><td><span id="finplan'+rowFCounter+'" class="d-none">'+fixd+'</span><a href="javascript:void(0);" class="del-frow" data-id="'+rowFCounter+'">Delete</a></td></tr>';
+        let tblrow = '<tr id="frw-'+rowFCounter+'"><th scope="row">'+ price +'</th><td>'+ plan[1] +'</td><td>'+ qty +'</td><td>'+total +'</td><td><span id="finplan'+rowFCounter+'" class="d-none">'+fixd+'</span><a href="javascript:void(0);" class="del-frow" data-id="'+rowFCounter+'" title="Delete"><i class="fas fa-trash"></i></a></td></tr>';
 
         if(price && plan &&  qty){
             $('#tbl-fxd-plans tbody').append(tblrow);     
@@ -504,7 +557,7 @@ $(document).ready(function(){
               }
             },
             error:function(data){
-              alert(data.error);
+              alert(data);
               return;
             }
         });
@@ -523,7 +576,7 @@ $(document).ready(function(){
                     var fRead = new FileReader(); //new filereader
                     fRead.onload = (function(file){ //trigger function on successful read
                     return function(e) {
-                        var img = $('<img/>').addClass('thumb').attr('src', e.target.result); //create image element 
+                        var img = $('<img/>').addClass('img-fluid img-thumbnail m-1 mht-100').attr('src', e.target.result); //create image element 
                         $('#thumb-output').append(img); //append image to output element
                     };
                     })(file);

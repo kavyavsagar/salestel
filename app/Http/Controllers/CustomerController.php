@@ -36,10 +36,10 @@ class CustomerController extends Controller
         $data = DB::table('customers')
             ->join('users', 'users.id', '=', 'customers.refferedby')
             ->select('users.fullname', 'customers.*')
-            ->paginate(15);
+            ->orderBy('customers.id', 'DESC')
+            ->get();
 
-        return view('customer.index',compact('data'))
-            ->with('i', ($request->input('page', 1) - 1) * 5);
+        return view('customer.index',compact('data'));
     }
 
     /**

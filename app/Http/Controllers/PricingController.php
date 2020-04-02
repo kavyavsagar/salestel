@@ -29,9 +29,8 @@ class PricingController extends Controller
     public function index(Request $request)
     {
         //
-        $pricings = Pricing::orderBy('id','DESC')->paginate(10);
-        return view('pricing.index',compact('pricings'))
-            ->with('i', ($request->input('page', 1) - 1) * 10);
+        $pricings = Pricing::orderBy('id','DESC')->get();
+        return view('pricing.index',compact('pricings'));
     }
 
     /**

@@ -31,9 +31,12 @@ class OrderStatusController extends Controller
     public function index(Request $request)
     {
         //
-        $orderstatus = OrderStatus::orderBy('id','ASC')->paginate(5);
-        return view('orderstatus.index',compact('orderstatus'))
-            ->with('i', ($request->input('page', 1) - 1) * 5);
+        // $orderstatus = OrderStatus::orderBy('id','ASC')->paginate(5);
+        // return view('orderstatus.index',compact('orderstatus'))
+        //     ->with('i', ($request->input('page', 1) - 1) * 5);
+
+        $orderstatus = OrderStatus::orderBy('id','ASC')->get();
+        return view('orderstatus.index',compact('orderstatus'));
     }  
 
     /**
@@ -60,6 +63,8 @@ class OrderStatusController extends Controller
         ]);
     
         $input = $request->all();
+
+        $input['name'] = preg_replace('/\s+/', '_', $input['name']);
     
         $orderstatus = OrderStatus::create($input);
     
@@ -106,6 +111,8 @@ class OrderStatusController extends Controller
         ]);
     
         $input = $request->all();
+        
+        $input['name'] = preg_replace('/\s+/', '_', $input['name']);
 
         $orderstatus = OrderStatus::find($id);
         $orderstatus->update($input);

@@ -29,9 +29,8 @@ class PlanController extends Controller
     public function index(Request $request)
     {
         //
-        $plans = Plan::orderBy('id','DESC')->paginate(10);
-        return view('plan.index',compact('plans'))
-            ->with('i', ($request->input('page', 1) - 1) * 10);
+        $plans = Plan::orderBy('id','DESC')->get();
+        return view('plan.index',compact('plans'));
     }
 
     /**

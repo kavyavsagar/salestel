@@ -19,7 +19,7 @@ class CreateComplaintsTable extends Migration
             $table->text('description');
             $table->enum('priority', ['high','medium','low']);
             $table->integer('reported_by');
-            $table->string('uploads')->nullable();
+            $table->string('filepath')->nullable();
             $table->integer('attended_by')->default(0);
             $table->text('comment')->nullable();
             $table->tinyInteger('status')->default(1);
@@ -30,6 +30,11 @@ class CreateComplaintsTable extends Migration
                 ->references('id')
                 ->on('orders')
                 ->onDelete('cascade');
+        });
+
+        Schema::create('complaint_statuses', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
         });
     }
 

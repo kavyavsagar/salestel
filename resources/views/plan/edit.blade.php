@@ -2,56 +2,79 @@
 
 
 @section('content')
-<div class="row">
-    <div class="col-lg-12 margin-tb">
-        <div class="pull-left">
-            <h2>Edit Plan</h2>
-        </div>
-        <div class="pull-right">
-            <a class="btn btn-primary" href="{{ route('plan.index') }}"> Back</a>
-        </div>
+<!-- Content Header (Page header) -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Edit Plan</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="{{ url('/') }}">Home</a></li>
+          <li class="breadcrumb-item"><a href="{{ route('plan.index') }}">Plans</a></li>
+          <li class="breadcrumb-item active">Edit Plan</li>
+        </ol>
+      </div>
     </div>
-</div>
+  </div><!-- /.container-fluid -->
+</section>
 
-
-@if (count($errors) > 0)
-  <div class="alert alert-danger">
-    <strong>Whoops!</strong> There were some problems with your input.<br><br>
-    <ul>
-       @foreach ($errors->all() as $error)
-         <li>{{ $error }}</li>
-       @endforeach
-    </ul>
-  </div>
-@endif
-
-
-{!! Form::model($plan, ['method' => 'PATCH','route' => ['plan.update', $plan->id]]) !!}
-<div class="row">
-    <div class="col-xs-12 col-sm-12 col-md-12">
-        <div class="form-group">
-            <strong>Name:</strong>
-            {!! Form::text('plan', null, array('placeholder' => 'Plan Name','class' => 'form-control')) !!}
-        </div>
-    </div>
-    <div class="col-xs-12 col-sm-12 col-md-12">
-        <div class="form-group">
-            <strong>Plan Type:</strong>
-            <select class="form-control" name="plan_type">   
-              <option value="0">-- Select --</option>                
-              @foreach ($plantype as $value)
-                <option value="{{ $value }}" {{ ( $value == $plan->plan_type) ? 'selected' : '' }}> 
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <!-- left column -->
+     
+      <div class="col">
+        <!-- general form elements -->
+        <div class="card card-primary">
+          <div class="card-header">
+            <h3 class="card-title">Edit Plan</h3>
+          </div>
+          <!-- /.card-header -->
+          <!-- form start -->
+          {!! Form::model($plan, ['method' => 'PATCH','route' => ['plan.update', $plan->id]]) !!}
+            <div class="card-body">
+                @if (count($errors) > 0)
+                <div class="alert alert-danger">
+                    <strong>Whoops!</strong> There were some problems with your input.<br><br>
+                    <ul>
+                       @foreach ($errors->all() as $error)
+                         <li>{{ $error }}</li>
+                       @endforeach
+                    </ul>
+                </div>
+                @endif
+                <div class="form-group">
+                    <label for="plan-name">Name</label>                   
+                    {!! Form::text('plan', null, array('placeholder' => 'Plan Name','class' => 'form-control', 'id' => 'plan-name')) !!}
+                </div>
+                <div class="form-group">
+                  <label for="plan-type">Plan Type</label>
+                  <select class="form-control" name="plan_type" id="plan-type">   
+                    <option value="0">-- Select --</option>                
+                    @foreach ($plantype as $value)
+                       <option value="{{ $value }}" {{ ( $value == $plan->plan_type) ? 'selected' : '' }}> 
                     {{ ucwords($value) }} 
                 </option>
-              @endforeach    
-            </select>
+                    @endforeach    
+                  </select>
+              </div> 
+             
+            </div>
+            <!-- /.card-body -->
+            <div class="card-footer">
+              <button type="submit" class="btn btn-primary">Submit</button>
+              <a class="btn btn-default float-right" href="{{ route('plan.index') }}"> Cancel</a>
+            </div>
+          {!! Form::close() !!}
         </div>
+        <!-- /.card -->
     </div>
-
-    <div class="col-xs-12 col-sm-12 col-md-12 text-center">
-        <button type="submit" class="btn btn-primary">Submit</button>
+    
     </div>
-</div>
-{!! Form::close() !!}
+    </div>
+</section>
 
 @endsection
