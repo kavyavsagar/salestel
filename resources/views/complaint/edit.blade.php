@@ -47,8 +47,8 @@
                 </div>
                 @endif
                 <div class="form-group">
-                    <label for="orderid">Order ID</label>
-                    {!! Form::text('order_id', null, array('placeholder' => 'Order ID','class' => 'form-control', 'id' => 'orderid')) !!}
+                    <label for="acc_no">Customer Account No.</label>
+                    {!! Form::text('customer_acc_no', null, array('placeholder' => 'Account No.','class' => 'form-control', 'id' => 'acc_no')) !!}
                 </div> 
                 <div class="form-group">
                     <label for="complaint">Complaint</label>
@@ -61,7 +61,8 @@
                         <option value="medium" {{ ( 'medium' == $complaint->priority) ? 'selected' : '' }}>Medium</option>   
                         <option value="high" {{ ( 'high' == $complaint->priority) ? 'selected' : '' }}>High</option>    
                     </select>
-                </div> 
+                </div>
+                @hasanyrole('Coordinator|Admin') 
                 <div class="form-group">
                     <label>Reffered By:</label>
                     <select class="form-control" name="reported_by">   
@@ -72,7 +73,10 @@
                         </option>
                       @endforeach    
                     </select>                    
-                </div>                
+                </div>  
+                @else
+                  <input type="hidden" name="reported_by" value="{{$complaint->reported_by}}">
+                @endhasanyrole                
                 <div class="form-group">
                     <label>Upload all documents:</label>
                     <div class="input-group">
@@ -90,7 +94,7 @@
                      <div id="thumb-output"></div>
                     @if($complaint->filepath)
                     <div class="d-inline">    
-                       <img src="{{url($complaint->filepath)}}" class="img-fluid img-thumbnail m-1 mht-100">
+                       <img src="{{asset($complaint->filepath)}}" class="img-fluid img-thumbnail m-1 mht-100">
                     </div>
                     @endif
                 </div>

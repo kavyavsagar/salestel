@@ -32,6 +32,7 @@
               </p>
             </a>
           </li>
+          @can('customer-list')
           <li class="nav-item">
             <a href="{{ route('customer.index') }}" class="nav-link">
               <i class="nav-icon fas fa-users"></i>
@@ -40,8 +41,8 @@
               </p>
             </a>
           </li>
-
-
+          @endcan 
+          @can('order-list')
           <li class="nav-item has-treeview" id="order-mu">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-inbox"></i>
@@ -71,30 +72,18 @@
               </li>            
             </ul>
           </li>
-<!-- 
-          <li class="nav-item has-treeview menu-open">
-            <a href="#" class="nav-link active">
-              <i class="nav-icon fas fa-inbox"></i>
+          @endcan
+          @can('dsr-list') 
+          <li class="nav-item">
+            <a href="{{ route('dsr.index') }}" class="nav-link">
+              <i class="nav-icon fas fa-chart-line"></i>
               <p>
-                Orders
-                <i class="right fas fa-angle-left"></i>
+                DSR
               </p>
             </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ route('order.index') }}" class="nav-link active" rel="order">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>All Orders</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ route('order.create') }}" class="nav-link" rel="order">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Create New</p>
-                </a>
-              </li>
-            </ul>
-          </li>   -->
+          </li> 
+          @endcan 
+          @can('user-list')
           <li class="nav-item">
             <a href="{{ route('users.index') }}" class="nav-link">
               <i class="nav-icon fas fa-user-tie"></i>
@@ -103,6 +92,8 @@
               </p>
             </a>
           </li>
+          @endcan 
+          @can('pricing-list')
           <li class="nav-item">
             <a href="{{ route('pricing.index') }}" class="nav-link">
               <i class="nav-icon fas fa-file-invoice-dollar"></i>
@@ -111,6 +102,8 @@
               </p>
             </a>
           </li>
+          @endcan
+          @can('plan-list')
           <li class="nav-item">
             <a href="{{ route('plan.index') }}" class="nav-link">
               <i class="nav-icon fas fa-phone-alt"></i>
@@ -119,6 +112,8 @@
               </p>
             </a>
           </li>
+          @endcan
+          @can('role-list')
           <li class="nav-item">
             <a href="{{ route('roles.index') }}" class="nav-link">
               <i class="nav-icon fas fa-unlock-alt"></i>
@@ -127,6 +122,8 @@
               </p>
             </a>
           </li>
+          @endcan
+          @can('orderstatus-list')
           <li class="nav-item">
             <a href="{{ route('orderstatus.index') }}" class="nav-link">
               <i class="nav-icon fas fa-toggle-on"></i>
@@ -135,11 +132,22 @@
               </p>
             </a>
           </li>
+          @endcan
+          @can('complaint-list')
           <li class="nav-item">
             <a href="{{ route('complaint.index') }}" class="nav-link">
               <i class="nav-icon fas fa-comment-dots"></i>
               <p>
                 Complaints
+              </p>
+            </a>
+          </li> 
+          @endcan
+          <li class="nav-item">
+            <a href="{{ route('cache.clear') }}" class="nav-link">
+              <i class="nav-icon fas fa-broom"></i> 
+              <p>
+                Clear Cache
               </p>
             </a>
           </li>            

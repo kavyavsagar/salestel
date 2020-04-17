@@ -31,7 +31,18 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $data = User::orderBy('id','DESC')->get();
+        
+
+       
+        if(auth()->user()->hasRole('Team Lead')){ 
+            $data =  User::where('id', '=', auth()->user()->id)
+                    ->orWhere('parentid','=', auth()->user()->id)
+                    ->orderBy('id','DESC')
+                    ->get();
+        }else{
+            $data = User::orderBy('id','DESC')->get();
+        }
+        
         return view('users.index',compact('data'));
     }
     
@@ -122,10 +133,11 @@ class UserController extends Controller
             'fullname' => 'required',
             'email' => 'required|email|unique:users,email,'.$id,
             'password' => 'same:confirm-password',
-            'roles' => 'required'
+            //'roles' => 'required'
         ]);
     
         $input = $request->all();
+
         if(!empty($input['password'])){ 
             $input['password'] = Hash::make($input['password']);
         }else{
@@ -135,11 +147,14 @@ class UserController extends Controller
 
         $user = User::find($id);
         $user->update($input);
-        DB::table('model_has_roles')->where('model_id',$id)->delete();
-    
-        $user->assignRole($request->input('roles'));
-    
-        return redirect()->route('users.index')
+
+        if($request->input('roles')){
+            DB::table('model_has_roles')->where('model_id',$id)->delete();
+        
+            $user->assignRole($request->input('roles'));
+        }
+       
+        return redirect()->route('users.edit', $id)
                         ->with('success','User updated successfully');
     }
     

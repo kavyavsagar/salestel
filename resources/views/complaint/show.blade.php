@@ -38,8 +38,8 @@
           <!-- /.card-header -->
           <div class="card-body">          
             <dl class="row">
-              <dt class="col-sm-4">Order ID</dt>
-              <dd class="col-sm-8">#{{ $complaint->order_id }}</dd>
+              <dt class="col-sm-4">Customr Account No.</dt>
+              <dd class="col-sm-8">{{ $complaint->customer_acc_no }}</dd>
               <dt class="col-sm-4">Details</dt>
               <dd class="col-sm-8">{{ $complaint->description }}</dd>         
               <dt class="col-sm-4">Priority</dt>
@@ -67,7 +67,7 @@
               <dd class="col-sm-8">{{ date("d-m-Y", strtotime($complaint->created_at)) }}</dd>  
               @if($complaint->filepath)
                 <dd class="col-sm-12">   
-                   <img src="{{url($complaint->filepath)}}" class="img-fluid img-thumbnail m-1 mht-100">
+                   <img src="{{asset($complaint->filepath)}}" class="img-fluid img-thumbnail m-1 mht-100">
                 </dd>  
               @endif 
                  

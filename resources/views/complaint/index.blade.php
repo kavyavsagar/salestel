@@ -41,7 +41,7 @@
             <thead>
             <tr>
               <th>#</th>
-              <th>OrderNo</th>
+              <th>Account No.</th>
               <th>Priority</th>
               <th>Reported By</th>
               <th>Status</th>
@@ -53,7 +53,7 @@
             @foreach ($data as $complaint)              
             <tr>
               <td>{{ $complaint->id }}</td>
-              <td>{{ $complaint->order_id }}</td>
+              <td>{{ $complaint->customer_acc_no }}</td>
               <td>@switch($complaint->priority)
                   @case('high')
                       <span class="text-danger">{{ ucfirst($complaint->priority) }}</span>
@@ -85,7 +85,7 @@
             <tfoot>
             <tr>
               <th>#</th>
-              <th>OrderNo</th>
+              <th>Account No.</th>
               <th>Priority</th>
               <th>Reported By</th>
               <th>Status</th>

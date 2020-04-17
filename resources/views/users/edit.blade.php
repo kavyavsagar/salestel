@@ -30,12 +30,17 @@
         <!-- general form elements -->
         <div class="card card-primary">
           <div class="card-header">
-            <h3 class="card-title">New User</h3>
+            <h3 class="card-title">Edit User Profile</h3>
           </div>
           <!-- /.card-header -->
           <!-- form start -->          
             {!! Form::model($user, ['method' => 'PATCH','route' => ['users.update', $user->id]]) !!}
             <div class="card-body">
+                @if ($message = Session::get('success'))
+                  <div class="alert alert-success">
+                      <p>{{ $message }}</p>
+                  </div>
+                @endif
                 @if (count($errors) > 0)
                 <div class="alert alert-danger">
                     <strong>Whoops!</strong> There were some problems with your input.<br><br>
@@ -91,8 +96,9 @@
             <div class="row"> 
                 <div class="col-xs-12 col-sm-6 col-md-6">
                     <div class="form-group">
-                        <label>Assign Team Lead:</label>
-                        <select class="form-control" name="parentid">   
+                        <label>Assign Team Lead:</label>                   
+                        
+                        <select class="form-control" name="parentid" @if(!Gate::check('user-create')) disabled @endif>   
                           <option value="0">-- Select --</option>                
                           @foreach ($parents as $key => $value)
                             <option value="{{ $key }}" {{ ( $key == $user->parentid) ? 'selected' : '' }}> 
@@ -100,13 +106,24 @@
                             </option>
                           @endforeach    
                         </select>
-                       <!--  {!! Form::select('parentid', $parents, null, array('class' => 'form-control')) !!} -->
+                    
                     </div>
                 </div>
                 <div class="col-xs-12 col-sm-6 col-md-6">
                     <div class="form-group">
                         <label>Role:</label>
-                        {!! Form::select('roles[]', $roles,$userRole, array('class' => 'form-control','multiple')) !!}
+                        <select class="form-control" name="roles" @if(!Gate::check('user-create')) disabled @endif>   
+                          <option value="0">-- Select --</option>                
+                          @foreach ($roles as $key => $value)
+                            <option value="{{ $key }}" {{ ( $key == isset($userRole[$key])) ? 'selected' : '' }}> 
+                                {{ $value }} 
+                            </option>
+                          @endforeach    
+                        </select>
+
+                       <!--  @can('user-create')
+                        {!! Form::select('roles[]', $roles, $userRole, array('class' => 'form-control','multiple')) !!}
+                        @endcan  -->
                     </div>
                 </div>
             </div>
@@ -114,7 +131,9 @@
             <!-- /.card-body -->
             <div class="card-footer">
               <button type="submit" class="btn btn-primary">Submit</button>
+              @can('user-list')
               <a class="btn btn-default float-right" href="{{ route('users.index') }}"> Cancel</a>
+              @endcan 
             </div>
           {!! Form::close() !!}
         </div>

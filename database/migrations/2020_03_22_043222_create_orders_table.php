@@ -16,15 +16,14 @@ class CreateOrdersTable extends Migration
 
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('customer_id');
-            // $table->string('leadno')->nullable();
-            // $table->string('du_activity_no')->nullable();
-            // $table->string('work_order_no')->nullable();
-            // $table->integer('sono')->default(0);
+            $table->unsignedBigInteger('customer_id');            
             $table->enum('plan_type', ['fixed', 'mobile']);
             $table->integer('total_amount')->default(0);
             $table->integer('order_status_id')->default(0);
-            $table->date('activation_date')->nullable();
+            $table->date('activation_date')->nullable();            
+            $table->enum('sales_priority', ['hot', 'warm', 'cold']);
+            $table->date('exp_closing_date')->nullable();
+            $table->integer('exp_revenue')->nullable();            
             $table->timestamps();
 
             $table->foreign('customer_id')
@@ -54,7 +53,7 @@ class CreateOrdersTable extends Migration
             $table->integer('price');
             $table->string('plan');
             $table->integer('plan_id');
-            $table->enum('plan_type', ['NL', 'INL']);            
+            $table->enum('plan_type', ['New', 'MRV', 'Migrated']);            
             $table->integer('quantity');
             $table->integer('total');
             $table->timestamps();

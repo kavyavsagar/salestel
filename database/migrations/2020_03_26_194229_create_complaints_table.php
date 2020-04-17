@@ -15,7 +15,7 @@ class CreateComplaintsTable extends Migration
     {
         Schema::create('complaints', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('order_id');
+            $table->string('customer_acc_no');
             $table->text('description');
             $table->enum('priority', ['high','medium','low']);
             $table->integer('reported_by');
@@ -24,12 +24,7 @@ class CreateComplaintsTable extends Migration
             $table->text('comment')->nullable();
             $table->tinyInteger('status')->default(1);
             $table->timestamps();
-            
-
-            $table->foreign('order_id')
-                ->references('id')
-                ->on('orders')
-                ->onDelete('cascade');
+ 
         });
 
         Schema::create('complaint_statuses', function (Blueprint $table) {

@@ -32,12 +32,28 @@ class CustomerController extends Controller
      */
     public function index(Request $request)
     {
+        $Team = [];
+        
+        array_push($Team, auth()->user()->id);
 
-        $data = DB::table('customers')
+        if(auth()->user()->hasRole('Team Lead')){
+            $tusers =  User::where('parentid', '=', auth()->user()->id)
+                    ->get()
+                    ->pluck('id')->toArray();
+
+            array_push($Team, $tusers);
+        }
+
+
+        $query = DB::table('customers')
             ->join('users', 'users.id', '=', 'customers.refferedby')
             ->select('users.fullname', 'customers.*')
-            ->orderBy('customers.id', 'DESC')
-            ->get();
+            ->orderBy('customers.id', 'DESC');
+
+        if(auth()->user()->hasAnyRole('Agent', 'Team Lead')){           
+            $query->whereIn('refferedby', $Team);
+        }
+        $data = $query->get();
 
         return view('customer.index',compact('data'));
     }
@@ -65,6 +81,7 @@ class CustomerController extends Controller
         //
         $this->validate($request, [
             'company_name' => 'required',
+            'account_no' => 'required',
             'authority_name' => 'required',
             'authority_email' => 'required|email|unique:customers,authority_email',
             'authority_phone' => 'required',
@@ -91,7 +108,8 @@ class CustomerController extends Controller
         // For Customers
         $cust_insert = [
             'company_name' => $input['company_name'],
-            'location' => $input['location'],
+            'account_no'   => $input['account_no'],
+            'location'     => $input['location'],
             'authority_name' => $input['authority_name'],
             'authority_email' => $input['authority_email'],
             'authority_phone' => $input['authority_phone'],
@@ -140,7 +158,17 @@ class CustomerController extends Controller
 
         $documents = DB::table('customer_documents')->where('customer_id',$id)->get()->pluck('document_path')->toArray();
 
-        return view('customer.show',compact('customer','documents'));
+        $orders = DB::table('orders')
+            ->join('order_statuses AS os', 'os.id', '=', 'orders.order_status_id')
+            ->join('order_plans AS op', 'op.order_id', '=', 'orders.id')
+            ->join('customers', 'customers.id', '=', 'orders.customer_id')
+            ->select('os.name AS status', 'orders.total_amount', 'orders.created_at', 'orders.id', 'orders.plan_type', 'op.price', 'op.plan', 'op.quantity', 'op.plan_type AS ptype', 'op.total')
+            ->where('orders.customer_id', $id)
+            ->orderBy('orders.id','DESC')
+            ->get();
+        
+
+        return view('customer.show',compact('customer','documents', 'orders'));
     }
 
     /**
@@ -187,6 +215,7 @@ class CustomerController extends Controller
         //
         $this->validate($request, [
             'company_name' => 'required',
+            'account_no'   => 'required',
             'authority_name' => 'required',
             'authority_email' => 'required|email|unique:customers,authority_email,'.$id,              
             'authority_phone' => 'required',
@@ -212,6 +241,7 @@ class CustomerController extends Controller
         // For Customers
         $cust_update = [
             'company_name' => $input['company_name'],
+            'account_no'   => $input['account_no'],
             'location' => $input['location'],
             'authority_name' => $input['authority_name'],
             'authority_email' => $input['authority_email'],
@@ -256,8 +286,8 @@ class CustomerController extends Controller
     public function destroy($id)
     {
         
-        $docObj = DB::table('customer_documents')->where('customer_id',$id);
-        $docObj = $docObj->get();
+        $docqry = DB::table('customer_documents')->where('customer_id',$id);
+        $docObj = $docqry->get();
 
         $destinationPath = public_path().'/uploads/'; // upload path   
       
@@ -269,7 +299,7 @@ class CustomerController extends Controller
             }
         }    
 
-        DB::table('customer_documents')->delete();
+        $docqry->delete();
 
         Customer::find($id)->delete(); 
 

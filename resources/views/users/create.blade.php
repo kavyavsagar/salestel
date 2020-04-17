@@ -106,7 +106,15 @@
                 <div class="col-xs-12 col-sm-6 col-md-6">
                     <div class="form-group">
                         <label>Role:</label>
-                        {!! Form::select('roles[]', $roles,[], array('class' => 'form-control','multiple')) !!}
+                        <select class="form-control" name="roles">   
+                          <option value="">-- Select --</option>                
+                          @foreach ($roles as $key => $value)
+                            <option value="{{ $key }}"> 
+                                {{ $value }} 
+                            </option>
+                          @endforeach    
+                        </select>
+                        <!-- {!! Form::select('roles[]', $roles,[], array('class' => 'form-control','multiple')) !!} -->
                     </div>
                 </div>
             </div>

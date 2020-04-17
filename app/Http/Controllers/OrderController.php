@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use \App\Http\Controllers\CustomerController;
 use Redirect;
 use Validator,Response;
+use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
 
 // Models
 use DB;
@@ -15,6 +17,7 @@ use App\Pricing;
 use App\Plan;
 use App\OrderStatus;
 use App\Order;
+use App\Exports\OrderExport;
 
 class OrderController extends Controller
 {
@@ -39,16 +42,86 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
+       
+        $input = $request->all();
 
-        $data = DB::table('orders')
+        //order status
+        $ordstatus = OrderStatus::orderBy('id','ASC')->get()
+                    ->pluck('name', 'id')->toArray();
+
+        // Users
+        $arUser = User::all()->toArray();        
+
+        $Team = [];       
+
+        $tusers = []; $users =[]; $unique_parent =[];
+        foreach ($arUser as $key => $us) {
+      
+            $users[$us['id']] =  $us['fullname'];
+
+            // get unique parent ids
+            if($us['parentid'] !=0 && !in_array($us['parentid'], $unique_parent)){
+                $unique_parent[$us['parentid']] = $us['parentid'];
+            }
+            // For getting teams of login team lead
+            if($us['parentid'] == auth()->user()->id || 
+                (isset($input['parentid']) && $input['parentid'] == $us['parentid'])){               
+                array_push($tusers, $us['id']);
+            }
+        }
+
+        if(isset($input['parentid']) && $input['parentid'] !=0 ){   // search by team
+            array_push($Team, $input['parentid']); 
+            $Team = array_merge($Team, $tusers);
+
+        }else if(isset($input['userid']) && $input['userid'] !=0 ){  // search by user
+            array_push($Team, $input['userid']); 
+
+        }else if(auth()->user()->hasAnyRole('Agent', 'Team Lead')){           
+            array_push($Team, auth()->user()->id);  // for agent and team lead           
+
+            if(auth()->user()->hasRole('Team Lead')) {  // for merging team with team lead
+                $Team = array_merge($Team, $tusers);
+            } 
+        } 
+        $custIds = [];
+
+        if(!empty($Team)){
+            $custIds = DB::table('customers')->whereIn('customers.refferedby', $Team)
+                    ->get()
+                    ->pluck('id')->toArray();
+        }
+
+        $query = DB::table('orders')
             ->join('order_statuses', 'order_statuses.id', '=', 'orders.order_status_id')
             ->join('customers', 'customers.id', '=', 'orders.customer_id')
             ->join('users', 'users.id', '=', 'customers.refferedby')
-            ->select('order_statuses.name AS status','customers.company_name', 'users.fullname', 'orders.total_amount', 'orders.created_at', 'orders.id', 'orders.plan_type')
-            ->orderBy('orders.id', 'DESC')
-            ->paginate(10);
+            ->select('order_statuses.name AS status','customers.company_name', 'customers.account_no',  'users.fullname', 'orders.total_amount', 'orders.created_at', 'orders.id', 'orders.plan_type')
+            ->where('orders.order_status_id','<>', 14); // initial status -DSR                         
+        
+        if(isset($input['statusid']) && $input['statusid'] !=0 ){
+            $query->where('orders.order_status_id','=', $input['statusid']);
+        }
+        if(!empty($custIds)){ 
+            // condition applied for search by parent or team lead/agent login or search by user
+            $query->whereIn('orders.customer_id', $custIds);    
+        }
+        
+        if(isset($input['start_date']) && $input['start_date'] != ""
+            && isset($input['end_date']) && $input['end_date'] != ""){  // Search by dates
+            
+            $from =  new Carbon($input['start_date']);           
+            $to =   new Carbon($input['end_date']);
+            
+           $query->whereBetween('orders.created_at', array($from.'.000000', $to->endOfDay().'.000000' ));          
+        }
 
-        return view('order.index',compact('data'))
+        $query->orderBy('orders.id', 'DESC');
+        $data = $query->paginate(10);
+
+        $fields = $input;
+        
+        return view('order.index',compact('data', 'users', 'ordstatus', 'unique_parent', 'fields'))
             ->with('i', ($request->input('page', 1) - 1) * 10);
     }
     /**
@@ -58,30 +131,94 @@ class OrderController extends Controller
      */
     public function completed(Request $request)
     {
+        // $currentMonth = date('m');
+        $input = $request->all();
 
-        $currentMonth = date('m');
-         $input = $request->all();
+        // Users
+        $arUser = User::all()->toArray();        
 
-         print_r($input);
+        $Team = [];       
 
+        $tusers = []; $users =[]; $unique_parent =[];
+        foreach ($arUser as $key => $us) {
+      
+            $users[$us['id']] =  $us['fullname'];
 
+            // get unique parent ids
+            if($us['parentid'] !=0 && !in_array($us['parentid'], $unique_parent)){
+                $unique_parent[$us['parentid']] = $us['parentid'];
+            }
+            // For getting teams of login team lead
+            if($us['parentid'] == auth()->user()->id || 
+                (isset($input['parentid']) && $input['parentid'] == $us['parentid'])){               
+                array_push($tusers, $us['id']);
+            }
+        }
 
-        $data = DB::table('orders')
+        if(isset($input['parentid']) && $input['parentid'] !=0 ){   // search by team
+            array_push($Team, $input['parentid']); 
+            $Team = array_merge($Team, $tusers);
+
+        }else if(isset($input['userid']) && $input['userid'] !=0 ){  // search by user
+            array_push($Team, $input['userid']); 
+
+        }else if(auth()->user()->hasAnyRole('Agent', 'Team Lead')){           
+            array_push($Team, auth()->user()->id);  // for agent and team lead           
+
+            if(auth()->user()->hasRole('Team Lead')) {  // for merging team with team lead
+                $Team = array_merge($Team, $tusers);
+            } 
+        } 
+        $custIds = [];
+
+        if(!empty($Team)){
+            $custIds = DB::table('customers')->whereIn('customers.refferedby', $Team)
+                    ->get()
+                    ->pluck('id')->toArray();
+        }
+
+        $status = (isset($input['statusid']) && $input['statusid'] !=0 )? $input['statusid']: 13;
+
+        $query = DB::table('orders')
             ->join('order_statuses', 'order_statuses.id', '=', 'orders.order_status_id')
             ->join('customers', 'customers.id', '=', 'orders.customer_id')
             ->join('users', 'users.id', '=', 'customers.refferedby')
-            ->select('order_statuses.name AS status','customers.company_name', 'users.fullname', 'orders.total_amount', 'orders.created_at', 'orders.id', 'orders.plan_type')
-            ->where('orders.order_status_id','=', 13)
-            ->whereRaw('MONTH(st_orders.created_at) = ?',[$currentMonth])
-            ->orderBy('orders.id', 'DESC')
-            ->paginate(10);
+            ->select('order_statuses.name AS status','customers.company_name','customers.account_no',  'users.fullname', 'orders.total_amount', 'orders.created_at', 'orders.id', 'orders.plan_type')
+            ->where('orders.order_status_id','=', $status);        
+            
 
-        $users = User::all()->pluck('fullname', 'id')->toArray();     
+        if(!empty($custIds)){ 
+            // condition applied for search by parent or team lead/agent login or search by user
+            $query->whereIn('orders.customer_id', $custIds);    
+        }
+        
+        if(isset($input['start_date']) && $input['start_date'] != ""
+            && isset($input['end_date']) && $input['end_date'] != ""){  // Search by dates
+            
+            $from =  new Carbon($input['start_date']);           
+            $to =   new Carbon($input['end_date']);
+            
+           $query->whereBetween('orders.created_at', array($from.'.000000', $to->endOfDay().'.000000' ));          
+        }
 
-        return view('order.complete',compact('data', 'users'))
+        $query->orderBy('orders.id', 'DESC');
+        $data = $query->paginate(10);
+
+        $fields = $input;
+        
+        return view('order.complete',compact('data', 'users', 'unique_parent', 'fields'))
             ->with('i', ($request->input('page', 1) - 1) * 10);
     }
 
+    public function exportCSV(Request $request)
+    {   
+
+        $input = $request->all();
+
+        $date = now();
+        return Excel::download(new OrderExport($input), 'order'.$date.'.xlsx');
+    }
+  
     /**
      * Show the form for creating a new resource.
      *
@@ -125,6 +262,7 @@ class OrderController extends Controller
 
         $this->validate($request, [
             'company_name' => 'required',
+            'account_no' => 'required',
             'authority_name' => 'required',          
             'authority_phone' => 'required',
             'technical_name' => 'required',
@@ -193,7 +331,7 @@ class OrderController extends Controller
                             "price"      => $arplan->price,
                             "plan"       => $arplan->plan,
                             "plan_id"    => $arplan->planid,
-                            "plan_type"  => ($ikey == 'fixed')? "NL": "INL",    
+                            "plan_type"  => $arplan->plan_type,    
                             "quantity"   => $arplan->qty,
                             "total"      => $arplan->total,
                             "created_at" => \Carbon\Carbon::now(), # new \Datetime()
@@ -252,7 +390,7 @@ class OrderController extends Controller
                     "price"      => $arplan->price,
                     "plan"       => $arplan->plan,
                     "plan_id"    => $arplan->planid,
-                    "plan_type"  => "NL",    
+                    "plan_type"  => $arplan->plan_type,    
                     "quantity"   => $arplan->qty,
                     "total"      => $arplan->total,
                     "created_at" => \Carbon\Carbon::now(), # new \Datetime()
@@ -311,15 +449,15 @@ class OrderController extends Controller
         $order = DB::table('orders AS or')            
             ->join('customers AS ct', 'ct.id', '=', 'or.customer_id')
             ->join('users AS us', 'us.id', '=', 'ct.refferedby')
-            ->select('us.fullname', 'ct.company_name', 'ct.location','ct.authority_name','ct.authority_email','ct.authority_phone','ct.technical_name','ct.technical_email','ct.technical_phone',
-                'or.total_amount','or.created_at', 'or.id', 'or.plan_type', 'or.customer_id', 'or.order_status_id')         
+            ->select('us.fullname', 'ct.company_name', 'ct.account_no', 'ct.location','ct.authority_name','ct.authority_email','ct.authority_phone','ct.technical_name','ct.technical_email','ct.technical_phone',
+                'or.total_amount','or.created_at', 'or.id', 'or.plan_type', 'or.customer_id', 'or.order_status_id', 'or.activation_date')         
             ->where('or.id', $id)
             ->first();
 
         $documents = DB::table('customer_documents')->where('customer_id',$order->customer_id)->get()->pluck('document_path')->toArray();
 
         $ord_plans = DB::table('order_plans AS op')
-                    ->select('op.price', 'op.plan', 'op.quantity', 'op.total')   
+                    ->select('op.price', 'op.plan', 'op.quantity', 'op.plan_type', 'op.total')   
                     ->where('op.order_id',$id)
                     ->get();
 
@@ -327,7 +465,7 @@ class OrderController extends Controller
                     ->orderBy('oh.id','DESC')
                     ->join('order_statuses AS os', 'os.id', '=', 'oh.order_status_id')
                     ->join('users AS us', 'us.id', '=', 'oh.added_by')
-                    ->select('os.name', 'oh.comments','oh.activity_no', 'oh.created_at', 'us.fullname')   
+                    ->select('os.name', 'oh.comments','oh.activity_no', 'oh.created_at','us.fullname')   
                     ->where('oh.order_id',$id)
                     ->get();
         
@@ -356,18 +494,29 @@ class OrderController extends Controller
         $order = Order::find($input['orderid']);
         $update['order_status_id'] = $statusid;
 
-        #### Order Status History
-        $status_insert = [
-                    "order_id"        => $input['orderid'],
-                    "order_status_id" => $statusid,
-                    "comments"        => $input['comments'],
-                    "activity_no"     => $input['activity_no'],                    
-                    "added_by"        => auth()->user()->id,
-                    "created_at"      => \Carbon\Carbon::now(), # new \Datetime()
-                    "updated_at"      => \Carbon\Carbon::now()  # new \Datetime()
-                    ];
+        // save activation date only on activation complete
+        if(isset($input['activation_date']) && $input['activation_date']!='' && $statusid == 13){
+            $date = date("Y-m-d", strtotime($input['activation_date']));
 
-        DB::table('order_historys')->insert($status_insert);
+            $update['activation_date'] = $date;
+        }
+
+        $oldorderstatus = $order->order_status_id;
+        if($oldorderstatus != $statusid){
+            
+            #### Order Status History
+            $status_insert = [
+                        "order_id"        => $input['orderid'],
+                        "order_status_id" => $statusid,
+                        "comments"        => $input['comments'],
+                        "activity_no"     => $input['activity_no'],                    
+                        "added_by"        => auth()->user()->id,
+                        "created_at"      => \Carbon\Carbon::now(), # new \Datetime()
+                        "updated_at"      => \Carbon\Carbon::now()  # new \Datetime()
+                        ];
+
+            DB::table('order_historys')->insert($status_insert);
+        }
 
         ## Update Order
         $order->update($update);
@@ -412,7 +561,7 @@ class OrderController extends Controller
         $documents = DB::table('customer_documents')->where('customer_id',$order->customer_id)->get()->pluck('document_path')->toArray();
 
         $arplans = DB::table('order_plans')
-                    ->select('price', 'plan', 'plan_id', 'quantity', 'total', 'id AS order_planid')
+                    ->select('price', 'plan', 'plan_id','plan_type', 'quantity', 'total', 'id AS order_planid')
                     ->where('order_id',$id)->get();
         
         $history = DB::table('order_historys AS oh')
@@ -440,6 +589,7 @@ class OrderController extends Controller
         $this->validate($request, [
             'orderid'   => 'required',
             'company_name' => 'required',
+            'account_no' => 'required',
             'authority_name' => 'required',          
             'authority_phone' => 'required',
             'technical_name' => 'required',

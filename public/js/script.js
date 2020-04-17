@@ -1,22 +1,22 @@
 $(document).ready(function(){
-	/****************** Sidebar Menu ***********************/
-	let url 	= window.location.pathname,
-		aUrl 	= url.split('/'),
-		len 	= aUrl.length,
-		obj 	= $('#order-mu');
-		len 	= len-1;
+  /****************** Sidebar Menu ***********************/
+  let url   = window.location.pathname,
+    aUrl   = url.split('/'),
+    len   = aUrl.length,
+    obj   = $('#order-mu');
+    len   = len-1;
 
-	if(aUrl[len] == 'order' || aUrl[len-1] == 'order'){
-		obj.addClass('menu-open');
-		obj.find('a').first().addClass('active');
-	}else{
-		obj.removeClass('menu-open');
-		obj.find('a').first().removeClass('active');
-	}
+  if(aUrl[len] == 'order' || aUrl[len-1] == 'order'){
+    obj.addClass('menu-open');
+    obj.find('a').first().addClass('active');
+  }else{
+    obj.removeClass('menu-open');
+    obj.find('a').first().removeClass('active');
+  }
 
-	/****************** End Sidebar ***********************/
+  /****************** End Sidebar ***********************/
 
-	/****************** Data tables ***********************/
+  /****************** Data tables ***********************/
     $('#order-status-tbl').DataTable({
       "paging": true,
       "lengthChange": false,
@@ -87,7 +87,7 @@ $(document).ready(function(){
 
         //Date range as a button
     $('#daterange-btn').daterangepicker(
-      {	
+      {  
 
         ranges   : {
           'Today'       : [moment(), moment()],
@@ -109,4 +109,15 @@ $(document).ready(function(){
       },
     );
 
+    /******************************************************************/
+
+    //Datemask dd/mm/yyyy
+    $('#datemask').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' });
+
+    $('#fdatemask').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' });
+
+    $("input[data-bootstrap-switch]").each(function(){
+      $(this).bootstrapSwitch('state', $(this).prop('checked'));
+      console.log(1)
+    });
 });

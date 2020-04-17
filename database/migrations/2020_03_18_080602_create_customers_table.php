@@ -17,6 +17,7 @@ class CreateCustomersTable extends Migration
             $table->id();
             $table->string('company_name');
             $table->string('location')->nullable();
+            $table->string('account_no');            
             $table->string('authority_name');
             $table->string('authority_email')->unique();
             $table->string('password')->nullable();

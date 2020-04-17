@@ -32,13 +32,28 @@ class ComplaintController extends Controller
      */
      public function index(Request $request)
     {
-        //
+        //  
+        $Team = [];
+        
+        array_push($Team, auth()->user()->id);
 
-        $data = DB::table('complaints')
+        if(auth()->user()->hasRole('Team Lead')){
+            $tusers =  User::where('parentid', '=', auth()->user()->id)
+                    ->get()
+                    ->pluck('id')->toArray();
+
+            array_push($Team, $tusers);
+        }
+
+        $query = DB::table('complaints')
             ->join('users AS u1', 'u1.id', '=', 'complaints.reported_by')
             ->join('complaint_statuses AS cs', 'cs.id', '=', 'complaints.status')
-            ->select('u1.fullname', 'cs.name AS status_name', 'complaints.*')
-            ->paginate(10);
+            ->select('u1.fullname', 'cs.name AS status_name', 'complaints.*');
+       
+        if(auth()->user()->hasAnyRole('Agent', 'Team Lead')){           
+            $query->whereIn('complaints.reported_by', $Team);
+        }
+        $data = $query->paginate(10);            
 
         return view('complaint.index',compact('data'))
             ->with('i', ($request->input('page', 1) - 1) * 5);
@@ -67,7 +82,7 @@ class ComplaintController extends Controller
         //
 
         $this->validate($request, [
-            'order_id' => 'required',
+            'customer_acc_no' => 'required',
             'description' => 'required',
             'priority' => 'required',
             'reported_by' => 'required', 
@@ -169,7 +184,7 @@ class ComplaintController extends Controller
     {
         //
         $this->validate($request, [
-            'order_id' => 'required',
+            'customer_acc_no' => 'required',
             'description' => 'required',
             'priority' => 'required',
             'reported_by' => 'required', 

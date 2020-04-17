@@ -44,6 +44,7 @@
             <tr>
              <th>#</th>
              <th>Company</th>
+             <th>Account No.</th>
              <th>Person</th>
              <th>Phone</th>
              <th>Reffered By</th>
@@ -54,7 +55,8 @@
             @foreach ($data as $key => $customer)         
             <tr>
               <td>{{ $customer->id }}</td>
-              <td>{{ $customer->company_name }}</td>
+              <td>{{ $customer->company_name }} </td>
+              <td>{{ $customer->account_no }}</td>
               <td>{{ $customer->authority_name }}</td>
               <td>{{ $customer->authority_phone }}</td>
               <td>{{ $customer->fullname }}</td>        
@@ -76,6 +78,7 @@
             <tr>
              <th>#</th>
              <th>Company</th>
+             <th>Account No.</th>
              <th>Person</th>
              <th>Phone</th>
              <th>Reffered By</th>

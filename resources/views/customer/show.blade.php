@@ -36,7 +36,9 @@
           <div class="card-body">          
             <dl class="row">
               <dt class="col-sm-4">Company Name</dt>
-              <dd class="col-sm-8">{{ $customer->company_name }}</dd>
+              <dd class="col-sm-8">{{ $customer->company_name }} </dd>
+              <dt class="col-sm-4">Account Number</dt>
+              <dd class="col-sm-8">{{ $customer->account_no }}</dd>              
               <dt class="col-sm-4">Location</dt>
               <dd class="col-sm-8">{{ $customer->location }}</dd>         
               <dt class="col-sm-4">Reffered by</dt>
@@ -64,7 +66,9 @@
               <dt class="col-sm-4">Email</dt>
               <dd class="col-sm-8"> {{ $customer->authority_email }}</dd>
               <dt class="col-sm-4">Phone</dt>
-              <dd class="col-sm-8">{{ $customer->authority_phone }}</dd>                         
+              <dd class="col-sm-8">{{ $customer->authority_phone }}</dd>       
+              <dt class="col-sm-4">&nbsp;</dt>
+              <dd class="col-sm-8">&nbsp;</dd>                   
             </dl>
           </div>
           <!-- /.card-body -->
@@ -88,7 +92,9 @@
               <dt class="col-sm-4">Email</dt>
               <dd class="col-sm-8"> {{ $customer->technical_email }}</dd>
               <dt class="col-sm-4">Phone</dt>
-              <dd class="col-sm-8">{{ $customer->technical_phone }}</dd>                        
+              <dd class="col-sm-8">{{ $customer->technical_phone }}</dd>    
+              <dt class="col-sm-4">&nbsp;</dt>
+              <dd class="col-sm-8">&nbsp;</dd>                      
             </dl>
           </div>
           <!-- /.card-body -->
@@ -111,12 +117,65 @@
             <dl class="row">         
               <dd class="col-sm-12">
                 @foreach ($documents as $key => $doc)
-                    <div id="{{$key}}" class="d-inline">    
-                       <img src="{{url($doc)}}" class="img-fluid img-thumbnail m-1 mht-100">
+                    <div id="{{$key}}" class="d-inline">                       
+                       <img src="{{asset($doc)}}" class="img-fluid img-thumbnail m-1 mht-100">
                     </div>
                 @endforeach
               </dd>       
             </dl>
+          </div>
+          <!-- /.card-body -->  
+        </div>
+      </div>
+    </div>
+    <div class="row">
+        <!-- left column -->     
+      <div class="col-xs-12 col-sm-12 col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-inbox"></i>&nbsp;
+              Order and Plan History
+            </h3>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body">  
+
+            <div class="table-responsive p-0">
+              <table class="table table-striped table-hover text-nowrap">
+                  <thead>
+                  <tr>
+                    <th scope="col">Order</th>
+                    <th scope="col">Status</th> 
+                    <th scope="col">Date</th> 
+                    <th scope="col">MRC</th>
+                    <th scope="col">PLAN</th>
+                  <!--   <th scope="col">TYPE</th> -->
+                    <th scope="col">QTY</th>
+                    <th scope="col">TOTAL (AED)</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  @if(!count($orders))  
+                  <tr>
+                      <td colspan="7" align="center">No Order Plans !!</td>
+                  </tr>
+                  @endif
+                  @foreach ($orders as $key => $plan)
+                  <tr>
+                      <th scope="row">#{{$plan->id}} - {{ ucfirst($plan->plan_type) }}</th>
+                      <td>{{ ucwords(str_replace("_"," ",$plan->status)) }}</td>
+                      <td>{{ date("d/m/Y", strtotime($plan->created_at)) }}</td>
+                      <th scope="row">{{$plan->price}}</th>
+                      <td>{{$plan->plan}}</td>
+                   <!--    <td>{{$plan->ptype}}</td> -->
+                      <td>{{$plan->quantity}}</td>
+                      <td>{{$plan->total}}</td>
+                  </tr>                
+                  @endforeach  
+                  </tbody>
+              </table>
+            </div>            
           </div>
           <!-- /.card-body -->  
           <div class="card-footer">
@@ -129,4 +188,4 @@
     </div>
 </section>
 
-@endsection
+@endsection          

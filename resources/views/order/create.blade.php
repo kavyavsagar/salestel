@@ -64,7 +64,7 @@
                 <div class="tab-pane fade show active" id="nav-customer" role="tabpanel" aria-labelledby="nav-customer-tab">
                     <div class="row"><div class="col-xs-12 col-sm-12 col-md-12"><br></div></div>
                     <div class="row">
-                        <div class="col-xs-12 col-sm-4 col-md-4">
+                        <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
                                 <label>Customer (existing):</label>
                                 <select class="form-control" name="customerid" id="customerid">   
@@ -77,13 +77,21 @@
                             </select>
                             </div>
                         </div> 
-                        <div class="col-xs-12 col-sm-4 col-md-4">
+                        <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
                                 <label>Company Name:</label>
                                 {!! Form::text('company_name', null, array('placeholder' => 'Company Name','class' => 'form-control')) !!}
                             </div>
+                        </div>                         
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label>Account Number:</label>
+                                {!! Form::text('account_no', null, array('placeholder' => 'Account No.','class' => 'form-control')) !!}
+                            </div>
                         </div>    
-                        <div class="col-xs-12 col-sm-4 col-md-4">
+                        <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
                                 <label>Location:</label>
                                 {!! Form::text('location', null, array('placeholder' => 'Location','class' => 'form-control')) !!}
@@ -142,20 +150,7 @@
                             </div>
                         </div>  
                     </div>
-                    <div class="row"> 
-                        <div class="col-xs-12 col-sm-6 col-md-6">
-                            <div class="form-group">
-                            <label>Reffered By:</label>
-                            <select class="form-control" name="refferedby">   
-                                <option value="0">-- Select --</option>                
-                                @foreach ($users as $key => $value)
-                                  <option value="{{ $key }}"> 
-                                    {{ $value }} 
-                                  </option>
-                                @endforeach    
-                            </select>            
-                            </div>
-                        </div>        
+                    <div class="row">         
                         <div class="col-xs-12 col-sm-6 col-md-6"> 
                             <div class="form-group">
                                 <label>Upload all documents:</label>
@@ -170,6 +165,23 @@
                                 </div>
                                 <span class="text-danger">{{ $errors->first('image') }}</span>           
                             </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-6 col-md-6">
+                        @hasanyrole('Coordinator|Admin')
+                            <div class="form-group">
+                            <label>Reffered By:</label>
+                            <select class="form-control" name="refferedby">   
+                                <option value="0">-- Select --</option>                
+                                @foreach ($users as $key => $value)
+                                  <option value="{{ $key }}"> 
+                                    {{ $value }} 
+                                  </option>
+                                @endforeach    
+                            </select>            
+                            </div>
+                        @else
+                          <input type="hidden" name="refferedby" value="{{Auth::id()}}">
+                        @endhasanyrole 
                         </div>
                     </div>
                     <div class="row">       
@@ -192,7 +204,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-xs-12 col-sm-3 col-md-3">
+                        <div class="col-xs-12 col-sm-2 col-md-2">
                         <div class="form-group">
                             <select class="form-control" name="mobile_price" id="mprice"> 
                                 <option value="">--MRC--</option>
@@ -204,7 +216,7 @@
                             </select>          
                         </div>
                         </div>
-                        <div class="col-xs-12 col-sm-4 col-md-4">
+                        <div class="col-xs-12 col-sm-3 col-md-3">
                         <div class="form-group">
                             <select class="form-control" name="mobile_plan" id="mplan"> 
                                 <option value="">--PLANS--</option>
@@ -214,6 +226,16 @@
                                 </option>
                                 @endforeach    
                             </select>
+                        </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-2 col-md-2">
+                        <div class="form-group">
+                            <select class="form-control" name="plan_type" id="mptype"> 
+                                <option value="">--PLAN TYPE--</option>
+                                <option value="New">New</option>
+                                <option value="MRV">MRV</option>
+                                <option value="Migrated">Migrated</option>
+                            </select>          
                         </div>
                         </div>
                         <div class="col-xs-12 col-sm-2 col-md-2">
@@ -233,6 +255,7 @@
                             <tr>
                               <th scope="col">MRC</th>
                               <th scope="col">PLAN</th>
+                              <th scope="col">Type</th>
                               <th scope="col">QTY</th>
                               <th scope="col">TOTAL (AED)</th>
                               <th scope="col">ACTION</th>
@@ -259,7 +282,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-xs-12 col-sm-3 col-md-3">
+                        <div class="col-xs-12 col-sm-2 col-md-2">
                         <div class="form-group">
                             <select class="form-control" name="fixed_price" id="fprice"> 
                                 <option value="">--MRC--</option>
@@ -271,7 +294,7 @@
                             </select>          
                         </div>
                         </div>
-                        <div class="col-xs-12 col-sm-4 col-md-4">
+                        <div class="col-xs-12 col-sm-3 col-md-3">
                         <div class="form-group">
                             <select class="form-control" name="fixed_plan" id="fplan"> 
                                 <option value="">--PLANS--</option>
@@ -281,6 +304,16 @@
                                 </option>
                                 @endforeach    
                             </select>
+                        </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-2 col-md-2">
+                        <div class="form-group">
+                            <select class="form-control" name="fixed_type" id="fptype"> 
+                                <option value="">--PLAN TYPE--</option>
+                                <option value="New">New</option>
+                                <option value="MRV">MRV</option>
+                                <option value="Migrated">Migrated</option>
+                            </select>          
                         </div>
                         </div>
                         <div class="col-xs-12 col-sm-2 col-md-2">
@@ -300,6 +333,7 @@
                             <tr>
                               <th scope="col">MRC</th>
                               <th scope="col">PLAN</th>
+                              <th scope="col">Type</th>
                               <th scope="col">QTY</th>
                               <th scope="col">TOTAL (AED)</th>
                               <th scope="col">ACTION</th>
@@ -386,6 +420,10 @@ $(document).ready(function(){
             $("#frmmobile").addClass('alert alert-danger').text("Please select the MRC!");
             return false;
         }
+        if(!$('#mptype').val()){           
+            $("#frmmobile").addClass('alert alert-danger').text("Please select the Plan Type!");
+            return false;
+        }
         if(!$('#mplan').val()){            
             $("#frmmobile").addClass('alert alert-danger').text("Please select the plan!");
             return false;
@@ -399,15 +437,16 @@ $(document).ready(function(){
 
         let price = parseInt($('#mprice').val()),
             splan = $('#mplan').val(),
+            ptype = $('#mptype').val(),
             qty = parseInt($('#mqty').val()),
             total = parseInt(price * qty),
             plan = splan.split("-");    
 
-        let mobd = JSON.stringify({"price": price, "planid": parseInt(plan[0]), "plan": plan[1], "qty": qty, "total": total});        
+        let mobd = JSON.stringify({"price": price, "planid": parseInt(plan[0]), "plan": plan[1], "plan_type": ptype, "qty": qty, "total": total});        
 
-        let tblrow = '<tr id="mrw-'+rowCounter+'"><th scope="row">'+ price +'</th><td>'+ plan[1] +'</td><td>'+ qty +'</td><td>'+total +'</td><td><span id="inplan'+rowCounter+'" class="d-none">'+mobd+'</span><a href="javascript:void(0);" class="del-mrow" data-id="'+rowCounter+'" title="Delete"><i class="fas fa-trash"></i></a></td></tr>';
+        let tblrow = '<tr id="mrw-'+rowCounter+'"><th scope="row">'+ price +'</th><td>'+ plan[1] +'</td><td>'+ ptype +'</td><td>'+ qty +'</td><td>'+total +'</td><td><span id="inplan'+rowCounter+'" class="d-none">'+mobd+'</span><a href="javascript:void(0);" class="del-mrow" data-id="'+rowCounter+'" title="Delete"><i class="fas fa-trash"></i></a></td></tr>';
 
-        if(price && plan &&  qty){
+        if(price && plan && ptype &&  qty){
             $('#tbl-mob-plans tbody').append(tblrow);     
         }
     }); 
@@ -437,6 +476,10 @@ $(document).ready(function(){
             $("#frmfixed").addClass('alert alert-danger').text("Please select the plan!");
             return false;
         }
+        if(!$('#fptype').val()){            
+            $("#frmfixed").addClass('alert alert-danger').text("Please select the plan type!");
+            return false;
+        }    
         if(!$('#fqty').val()){            
             $("#frmfixed").addClass('alert alert-danger').text("Please enter the quantity!");
             return false;
@@ -446,15 +489,16 @@ $(document).ready(function(){
 
         let price = parseInt($('#fprice').val()),
             splan = $('#fplan').val(),
+            fptype = $('#fptype').val(),
             qty = parseInt($('#fqty').val()),
             total = parseInt(price * qty),
             plan = splan.split("-");    
 
-        let fixd = JSON.stringify({"price": price, "planid": parseInt(plan[0]), "plan": plan[1], "qty": qty, "total": total});        
+        let fixd = JSON.stringify({"price": price, "planid": parseInt(plan[0]), "plan": plan[1], "plan_type": fptype, "qty": qty, "total": total});        
 
-        let tblrow = '<tr id="frw-'+rowFCounter+'"><th scope="row">'+ price +'</th><td>'+ plan[1] +'</td><td>'+ qty +'</td><td>'+total +'</td><td><span id="finplan'+rowFCounter+'" class="d-none">'+fixd+'</span><a href="javascript:void(0);" class="del-frow" data-id="'+rowFCounter+'" title="Delete"><i class="fas fa-trash"></i></a></td></tr>';
+        let tblrow = '<tr id="frw-'+rowFCounter+'"><th scope="row">'+ price +'</th><td>'+ plan[1] +'</td><td>'+ fptype +'</td><td>'+ qty +'</td><td>'+total +'</td><td><span id="finplan'+rowFCounter+'" class="d-none">'+fixd+'</span><a href="javascript:void(0);" class="del-frow" data-id="'+rowFCounter+'" title="Delete"><i class="fas fa-trash"></i></a></td></tr>';
 
-        if(price && plan &&  qty){
+        if(price && plan && fptype &&  qty){
             $('#tbl-fxd-plans tbody').append(tblrow);     
         }
     }); 
@@ -497,6 +541,7 @@ $(document).ready(function(){
                 if(data){
                     let cust = JSON.parse(data.customer);
                     $("#order_placed input[name=company_name]").val(cust.company_name);
+                    $("#order_placed input[name=account_no]").val(cust.account_no);
                     $("#order_placed input[name=location]").val(cust.location);
                     $("#order_placed input[name=authority_name]").val(cust.authority_name);
                     $("#order_placed input[name=authority_email]").val(cust.authority_email);
@@ -551,13 +596,16 @@ $(document).ready(function(){
             processData: false,        
             success:function(data){
               if(data.success){
-                alert(data.success);
-                console.log(data.redirect);
-                window.location.href = "{{ route('order.index') }}";
+                toastr.success(data.success); 
+
+                setTimeout(function(){
+                    window.location.href = "{{ route('order.index') }}";
+                }, 1200);
+
               }
             },
-            error:function(data){
-              alert(data);
+            error:function(data){             
+              toastr.error(data.errors); 
               return;
             }
         });

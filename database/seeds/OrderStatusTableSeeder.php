@@ -27,6 +27,8 @@ class OrderStatusTableSeeder extends Seeder
           'item_delivered',
           'activation_pending',
           'activation_complete',
+          'activation_complete',
+          'initial',
         ];
    
         foreach ($statuses as $status) {

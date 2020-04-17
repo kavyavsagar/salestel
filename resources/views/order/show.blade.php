@@ -35,7 +35,13 @@
               <ul class="list-group list-group-flush">
                 <li class="list-group-item">#{{ $order->id }} - {{ ucfirst($order->plan_type) }}</li>
                 <li class="list-group-item">{{ $order->total_amount }} AED</li>            
-                <li class="list-group-item">{{ date("d/m/Y", strtotime($order->created_at)) }}</li>
+                <li class="list-group-item">
+                  <span title="Created on"><i class="fas fa-calendar-plus"></i>&nbsp;{{ date("d/m/Y", strtotime($order->created_at)) }}</span>
+                  @if($order->activation_date)
+                    <span class="float-right" title="Activated on"><i class="fas fa-toggle-on text-success"></i>&nbsp;{{$order->activation_date}}</span>
+                  @endif
+                </li>
+
               </ul>         
             </div>
         </div>
@@ -48,7 +54,7 @@
                 </h3>
               </div>
               <ul class="list-group list-group-flush">
-                <li class="list-group-item">{{ $order->company_name }}</li>
+                <li class="list-group-item">{{ $order->company_name }}<span class="ml-2 text-info">({{ $order->account_no }})</span></li>
                 <li class="list-group-item">{{ $order->location }}</li>            
                 <li class="list-group-item">{{ $order->fullname }}</li>
               </ul>         
@@ -101,7 +107,7 @@
                 <div class="form-group">
                 @foreach ($documents as $key => $doc)
                     <div id="{{$key}}" class="d-inline"> 
-                       <img src="{{url($doc)}}" class="img-fluid img-thumbnail m-1 mht-100">
+                       <img src="{{asset($doc)}}" class="img-fluid img-thumbnail m-1 mht-100">
                     </div>
                 @endforeach 
                 </div>                  
@@ -139,7 +145,7 @@
                     <tr>
                       <th scope="col">Status</th>
                       <th scope="col">Comments</th>
-                      <th scope="col">Activity No</th>
+                      <th scope="col">Activity No.</th>
                       <th scope="col">Added By</th>
                       <th scope="col">Date Added</th>
                     </tr>
@@ -149,7 +155,11 @@
                     <tr>
                         <th scope="row">{{ucwords(str_replace("_"," ",$hist->name))}} </th>
                         <td>{{$hist->comments}}</td>
-                        <td>{{$hist->activity_no}}</td>
+                        <td>{{$hist->activity_no}}
+                          @if($order->activation_date && $hist->name == 'activation_complete')
+                            <span title="Activated on"><i class="fas fa-toggle-on text-success"></i>&nbsp;{{$order->activation_date}}</span>
+                          @endif
+                        </td>
                         <td>{{$hist->fullname}}</td>
                         <td>{{date("d/m/Y", strtotime($hist->created_at))}}</td>
                     </tr>
@@ -157,6 +167,7 @@
                     </tbody>
                 </table> 
                 </div>
+                @hasanyrole('Coordinator|Admin')
                 <div class="row">
                     <div class="col">
                         <strong class="text-uppercase">Change Order Status</strong>
@@ -178,8 +189,21 @@
                         </div>    
                     </div>
                     <div class="col-xs-12 col-sm-3 col-md-3">
-                        <div class="form-group">
+
+                        <div class="form-group {{ ($order->order_status_id == 13)? 'd-none' : ''}}" id="actno">
                             <input type="text" name="activity_no" placeholder ="Enter activity number" class="form-control"/>
+                        </div>
+
+
+                        <!-- Date dd/mm/yyyy -->
+                        <div class="form-group {{ ($order->order_status_id == 13)?'':  'd-none'}}" id="actda">
+                          <div class="input-group">
+                            <div class="input-group-prepend">
+                              <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                            </div>
+                            <input type="text" class="form-control" data-inputmask-alias="datetime" data-inputmask-inputformat="dd/mm/yyyy" data-mask name="activation_date" id="datemask">
+                          </div>
+                          <!-- /.input group -->
                         </div>
                     </div>
                     <div class="col-xs-12 col-sm-3 col-md-4">
@@ -193,6 +217,7 @@
                     </div>
               </div>
               {!! Form::close() !!}
+              @endhasanyrole
             </div>
             <div class="tab-pane fade" id="nav-plan" role="tabpanel" aria-labelledby="nav-plan-tab">
                 <div class="row">
@@ -204,6 +229,7 @@
                     <tr>
                       <th scope="col">MRC</th>
                       <th scope="col">PLAN</th>
+                      <th scope="col">TYPE</th>
                       <th scope="col">QTY</th>
                       <th scope="col">TOTAL (AED)</th>
                     </tr>
@@ -213,13 +239,14 @@
                     <tr>
                         <th scope="row">{{$plan->price}}</th>
                         <td>{{$plan->plan}}</td>
+                        <td>{{$plan->plan_type}}</td>
                         <td>{{$plan->quantity}}</td>
                         <td>{{$plan->total}}</td>
                     </tr>
                     @endforeach    
                     <tr>
                         <th scope="row"></th>
-                        <td colspan="2" align="right"><b>SubTotal :</b></td>
+                        <td colspan="3" align="right"><b>SubTotal :</b></td>
                         <td align="left">{{$order->total_amount}}</td>
                     </tr>                   
                     </tbody>
@@ -241,6 +268,35 @@
     </div>     
   </div>
 </section>    
+<script type="text/javascript">    
+$(document).ready(function(){
 
+  // Status
+  $('#ostatus').on('change', function(e){
+      let str = $(this).val(),
+          d = $('#actda'),
+          n = $('#actno');
+
+      let status = str.split("-")[1]; 
+
+      if(status == 'activation_complete')
+      {
+        if(d.hasClass("d-none")){
+          d.removeClass('d-none');  
+        }
+        
+        n.addClass('d-none');
+      }else{
+        if(n.hasClass("d-none")){
+          n.removeClass('d-none');  
+        }
+
+        d.addClass('d-none');
+      }
+  });
+
+}); 
+
+</script>
 
 @endsection

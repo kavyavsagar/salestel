@@ -47,13 +47,19 @@
                 @endif
 
             <div class="row">
-                <div class="col-xs-12 col-sm-6 col-md-6">
+                <div class="col-xs-12 col-sm-4 col-md-4">
                     <div class="form-group">
                         <label>Company Name:</label>
                         {!! Form::text('company_name', null, array('placeholder' => 'Company Name','class' => 'form-control')) !!}
                     </div>
-                </div>    
-                <div class="col-xs-12 col-sm-6 col-md-6">
+                </div>
+                <div class="col-xs-12 col-sm-4 col-md-4">
+                    <div class="form-group">
+                        <label>Account Number:</label>
+                        {!! Form::text('account_no', null, array('placeholder' => 'Account No.','class' => 'form-control')) !!}
+                    </div>
+                </div>     
+                <div class="col-xs-12 col-sm-4 col-md-4">
                     <div class="form-group">
                         <label>Location:</label>
                         {!! Form::text('location', null, array('placeholder' => 'Location','class' => 'form-control')) !!}
@@ -113,20 +119,6 @@
                 </div>   
             </div>
             <div class="row">    
-                <div class="col-xs-12 col-sm-6 col-md-6">
-                    <div class="form-group">
-                        <label>Reffered By:</label>
-                        <select class="form-control" name="refferedby">   
-                          <option value="0">-- Select --</option>                
-                          @foreach ($users as $key => $value)
-                            <option value="{{ $key }}"> 
-                                {{ $value }} 
-                            </option>
-                          @endforeach    
-                        </select>
-                        <!-- {!! Form::select('refferedby', $users, null, array('class' => 'form-control')) !!} -->
-                    </div>
-                </div>
                 <div class="col-xs-12 col-sm-6 col-md-6"> 
                     <div class="form-group">
                         <label>Upload all documents:</label>
@@ -141,7 +133,24 @@
                         </div>
                         <span class="text-danger">{{ $errors->first('image') }}</span>           
                     </div>        
-                </div>    
+                </div>  
+                <div class="col-xs-12 col-sm-6 col-md-6">    
+                    @hasanyrole('Coordinator|Admin')
+                    <div class="form-group">
+                        <label>Reffered By:</label>
+                        <select class="form-control" name="refferedby">   
+                            <option value="0">-- Select --</option>                
+                            @foreach ($users as $key => $value)
+                              <option value="{{ $key }}"> 
+                                {{ $value }} 
+                              </option>
+                            @endforeach    
+                        </select>            
+                    </div>
+                    @else
+                      <input type="hidden" name="refferedby" value="{{Auth::id()}}">
+                    @endhasanyrole 
+                </div>                
             </div>
             <div class="row">    
                 <div class="col-xs-12 col-sm-12 col-md-12">
