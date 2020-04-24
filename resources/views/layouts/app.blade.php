@@ -73,7 +73,7 @@
     <!-- /.control-sidebar -->
 
     <!-- Main Footer -->
-    <footer class="main-footer">
+    <footer class="main-footer d-none">
         <!-- To the right -->
         <div class="float-right d-none d-sm-inline">
           Telecom Sales Management System
@@ -96,7 +96,8 @@
       });
     }
     </script>  
-    <!-- REQUIRED SCRIPTS -->
+    
+    <!-- REQUIRED SCRIPTS -->   
 
     <!-- Bootstrap 4 -->
     <script src="{{ asset('plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>    

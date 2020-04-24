@@ -723,7 +723,8 @@ $(document).ready(function(){
               }
             },
             error:function(data){
-              toastr.error(data.errors); 
+              if(data.responseJSON)
+                toastr.error(data.responseJSON.message); 
               return;
             }
         });

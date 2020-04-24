@@ -143,6 +143,29 @@
             </a>
           </li> 
           @endcan
+          <li class="nav-item has-treeview" id="order-mu">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-video"></i>
+              <p>
+                Meetings
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ route('meeting.start') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Host a Meeting</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ route('meeting.index') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Join a Meeting</p>
+                </a>
+              </li>                   
+            </ul>
+          </li>
           <li class="nav-item">
             <a href="{{ route('cache.clear') }}" class="nav-link">
               <i class="nav-icon fas fa-broom"></i> 

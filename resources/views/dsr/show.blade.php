@@ -155,8 +155,11 @@
                               <span class="text-info">{{ ucfirst($order->sales_priority) }}</span>
                           @endswitch
                         </dd> 
-                        <!-- <dt class="col-sm-4">Activate To Order</dt>
-                        <dd class="col-sm-8"><input type="checkbox" name="activate_ord" data-bootstrap-switch data-off-color="danger" data-on-color="success" id="ostatus"></dd>  -->
+                        <dt class="col-sm-4">Order Activation</dt>
+                        <dd class="col-sm-8">
+                          <input type="hidden" name="orderid" value="{{$order->id}}" id="orderId">
+                          <a href="javascript:void(0);" class="btn btn-default" id="act-order" title="Move to orders"><i class="far fa-check-circle"></i></a>
+                        </dd> 
                       </dl>
                     </div>
                 </div>
@@ -206,5 +209,42 @@
   </div>
 </section>    
 
+<script type="text/javascript">    
+$(document).ready(function(){
+  $.ajaxSetup({
+      headers: {
+          'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+      }
+  });
 
+  $('#act-order').on('click', function(e){ //on file input change
+      e.preventDefault();
+
+      let obj = $(this),
+          oid = $("#orderId").val();
+
+      $.ajax({
+          type:'POST',
+          url:"{{ route('dsr.changestatus') }}",
+          data: {"orderid": oid},
+          dataType:'JSON',              
+          success:function(data){
+            if(data.success){
+              toastr.success(data.success); 
+
+              obj.removeClass('btn-default').addClass('btn-success');
+            }
+          },
+          error:function(data){
+            if(data.responseJSON)
+              toastr.error(data.responseJSON.message); 
+            return;
+          }
+      });
+
+  });
+
+
+});
+</script>
 @endsection

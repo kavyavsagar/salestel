@@ -42,6 +42,16 @@ Route::group(['middleware' => ['auth']], function() {
     Route::resource('dsr','DsrController');
     Route::get('/dsrexport', 'DsrController@exportCSV')->name('dsr.exportcsv');
     Route::post('/updateDsr', 'DsrController@update')->name('dsr.updateOrder');
+    Route::post('/activateDsr', 'DsrController@changeStatus')->name('dsr.changestatus');
+
+    Route::get('/chatapp/{id}', function () {
+        return view('videochat');
+    })->name('chatapp');
+
+    Route::get('/meeting/index', 'MeetingController@index')->name('meeting.index');
+    Route::post('/meeting/join', 'MeetingController@join')->name('meeting.join');
+    Route::get('/meeting/start', 'MeetingController@start')->name('meeting.start');
+    
 });
 
 Route::get('/clear-cache', function() {

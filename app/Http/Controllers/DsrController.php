@@ -406,26 +406,16 @@ class DsrController extends Controller
     public function changeStatus(Request $request){
         
         $this->validate($request, [      
-            'orderid'   => 'required',
-            'order_status' => 'required'     
+            'orderid'   => 'required'    
         ]); 
 
         $input = $request->all();
 
-        $astatus = explode("-",$input['order_status']);
-        $statusid = $astatus[0];
-        $status = $astatus[1];
-
+        // To open orders
+        $statusid = 1; // 
         $update = [];
         $order = Order::find($input['orderid']);
         $update['order_status_id'] = $statusid;
-
-        // save activation date only on activation complete
-        if(isset($input['activation_date']) && $input['activation_date']!='' && $statusid == 13){
-            $date = date("Y-m-d", strtotime($input['activation_date']));
-
-            $update['activation_date'] = $date;
-        }
 
         $oldorderstatus = $order->order_status_id;
         if($oldorderstatus != $statusid){
@@ -434,8 +424,8 @@ class DsrController extends Controller
             $status_insert = [
                         "order_id"        => $input['orderid'],
                         "order_status_id" => $statusid,
-                        "comments"        => $input['comments'],
-                        "activity_no"     => $input['activity_no'],                    
+                        "comments"        => 'DSR is activated as an order',
+                        "activity_no"     => '',                    
                         "added_by"        => auth()->user()->id,
                         "created_at"      => \Carbon\Carbon::now(), # new \Datetime()
                         "updated_at"      => \Carbon\Carbon::now()  # new \Datetime()
@@ -447,8 +437,7 @@ class DsrController extends Controller
         ## Update Order
         $order->update($update);
 
-        return redirect()->route('order.show', $order->id)
-                        ->with('success','Order status updated successfully');
+        return response()->json(['success'=>'DSR activated as an order successfully']);
 
     }
 
@@ -508,7 +497,7 @@ class DsrController extends Controller
      */
     public function update(Request $request)
     {
-        //
+        
         $this->validate($request, [
             'orderid'   => 'required',
             'company_name' => 'required',
@@ -526,6 +515,7 @@ class DsrController extends Controller
         ]); 
 
         $input = $request->all();
+
         $id = $input['orderid'];
 
         // For CUSTOMER
