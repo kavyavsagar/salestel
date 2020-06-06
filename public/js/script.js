@@ -1,20 +1,5 @@
 $(document).ready(function(){
-  /****************** Sidebar Menu ***********************/
-  let url   = window.location.pathname,
-    aUrl   = url.split('/'),
-    len   = aUrl.length,
-    obj   = $('#order-mu');
-    len   = len-1;
 
-  if(aUrl[len] == 'order' || aUrl[len-1] == 'order'){
-    obj.addClass('menu-open');
-    obj.find('a').first().addClass('active');
-  }else{
-    obj.removeClass('menu-open');
-    obj.find('a').first().removeClass('active');
-  }
-
-  /****************** End Sidebar ***********************/
 
   /****************** Data tables ***********************/
     $('#order-status-tbl').DataTable({
@@ -118,6 +103,7 @@ $(document).ready(function(){
 
     $("input[data-bootstrap-switch]").each(function(){
       $(this).bootstrapSwitch('state', $(this).prop('checked'));
-      console.log(1)
+      
     });
 });
+

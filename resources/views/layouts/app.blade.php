@@ -8,17 +8,31 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Telecom User And Sales Management') }}</title>
     <!-- Favicon -->   
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('image/logo/apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('image/logo/favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('image/logo/favicon-16x16.png') }}">
-    <link rel="icon" type="image/x-icon" href="{{ asset('image/logo/favicon.ico') }}" />
-    <link rel="manifest" href="{{ asset('manifest.json') }}">
-    <link rel="mask-icon" href="{{ asset('image/logo/safari-pinned-tab.svg') }}" color="#5bbad5">
-    <meta name="msapplication-TileColor" content="#87ceeb">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="msapplication-starturl" content="/">
-    <meta name="theme-color" content="#ffffff">
+  <link rel="apple-touch-startup-image" href="{{ asset('image/logo/apple-touch-icon.png') }}">
+  <link href="{{ asset('image/logo/iphone5_splash.png') }}" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
+  <link href="{{ asset('image/logo/iphone6_splash.png') }}" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
+  <link href="{{ asset('image/logo/iphoneplus_splash.png') }}" media="(device-width: 621px) and (device-height: 1104px) and (-webkit-device-pixel-ratio: 3)" rel="apple-touch-startup-image" />
+  <link href="{{ asset('image/logo/iphonex_splash.png') }}" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" rel="apple-touch-startup-image" />
+  <link href="{{ asset('image/logo/iphonexr_splash.png') }}" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
+  <link href="{{ asset('image/logo/iphonexsmax_splash.png') }}" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" rel="apple-touch-startup-image" />
+  <link href="{{ asset('image/logo/ipad_splash.png') }}" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
+  <link href="{{ asset('image/logo/ipadpro1_splash.png') }}" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
+  <link href="{{ asset('image/logo/ipadpro3_splash.png') }}" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
+  <link href="{{ asset('image/logo/ipadpro2_splash.png') }}" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('image/logo/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('image/logo/favicon-32x32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('image/logo/favicon-16x16.png') }}">
+  <link rel="icon" type="image/x-icon" href="{{ asset('image/logo/favicon.ico') }}" />
+  <link rel="manifest" href="{{ asset('manifest.json') }}">
+  <link rel="mask-icon" href="{{ asset('image/logo/safari-pinned-tab.svg') }}" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#87ceeb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes"> 
+  <meta name="apple-touch-fullscreen" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="TSM" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />   
+  <meta name="msapplication-starturl" content="/">
+  <meta name="theme-color" content="#ffffff">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="{{ asset('plugins/fontawesome-free/css/all.min.css') }}">
     <!-- Ionicons -->
@@ -62,8 +76,11 @@
             <h5>{{ Auth::user()->fullname }}</h5>
             <p class="ts-menu-item">
                 <a href="{{ route('users.edit',  Auth::id()) }}"><i class="fas fa-user-circle"></i>Account Settings</a></p>
+            <p class="ts-menu-item d-none" id="installContainer" >
+                <a id="btnInstall" href="#"><i class="fas fa-download"></i>Install App</a>
+            </p>
             <p class="ts-menu-item">
-                <a href="{{ route('logout') }}" onclick="event.preventDefault();document.getElementById('logout-form').submit();"><i class="fas fa-sign-out-alt"></i>{{ __('Logout') }}</a>
+               <a href="{{ route('logout') }}" onclick="event.preventDefault();document.getElementById('logout-form').submit();"><i class="fas fa-sign-out-alt"></i>{{ __('Logout') }}</a>
             </p>
             <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
             @csrf
@@ -73,13 +90,13 @@
     <!-- /.control-sidebar -->
 
     <!-- Main Footer -->
-    <footer class="main-footer d-none">
+    <footer class="main-footer d-none d-sm-block">
         <!-- To the right -->
         <div class="float-right d-none d-sm-inline">
           Telecom Sales Management System
         </div>
         <!-- Default to the left -->
-        <strong>Copyright &copy; 2020 <a href="https://www.emperorcom.ae/">Emperorcom Technologies</a>.</strong> All rights reserved.
+        Copyright &copy; 2020 <strong><a href="https://www.emperorcom.ae/">Emperorcom Technologies</a>.</strong> All rights reserved.
     </footer>
   </div>
 
@@ -97,10 +114,13 @@
     }
     </script>  
     
-    <!-- REQUIRED SCRIPTS -->   
+    <!-- REQUIRED SCRIPTS --> 
+    <script src="{{ asset('js/pwa.js') }}"></script>  
 
     <!-- Bootstrap 4 -->
-    <script src="{{ asset('plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>    
+    <script src="{{ asset('plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script> 
+    <!-- jQuery Ui -->
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>   
     <!-- DataTables -->
     <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>

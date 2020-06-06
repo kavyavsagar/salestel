@@ -32,15 +32,13 @@ class UserController extends Controller
     public function index(Request $request)
     {
         
-
-       
         if(auth()->user()->hasRole('Team Lead')){ 
             $data =  User::where('id', '=', auth()->user()->id)
                     ->orWhere('parentid','=', auth()->user()->id)
                     ->orderBy('id','DESC')
                     ->get();
         }else{
-            $data = User::orderBy('id','DESC')->get();
+            $data = User::orderBy('id','DESC')->where('id', '<>', '1')->get();
         }
         
         return view('users.index',compact('data'));
@@ -55,7 +53,13 @@ class UserController extends Controller
     {   
         //$parents = User::pluck('fullname','fullname')->all();
         $parents = User::all()->pluck('fullname', 'id')->toArray();
-        $roles = Role::pluck('name','name')->all();
+
+        if(auth()->user()->hasRole('Admin')){ 
+            $roles = Role::pluck('name','name')->all();
+        }else{
+            $roles = Role::where('id', '<>', '1')->pluck('name','name')->all();
+        }
+
         return view('users.create',compact('roles', 'parents'));
     }
     
@@ -70,7 +74,8 @@ class UserController extends Controller
         $this->validate($request, [
             'fullname' => 'required',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|same:confirm-password',           
+            'password' => 'required|same:confirm-password',
+            'phone' => 'required',           
             'roles' => 'required'
         ]);
     

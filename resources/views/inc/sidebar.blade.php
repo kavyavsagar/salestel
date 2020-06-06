@@ -32,18 +32,39 @@
               </p>
             </a>
           </li>
-          @can('customer-list')
-          <li class="nav-item">
-            <a href="{{ route('customer.index') }}" class="nav-link">
+          @can('customer-list')  
+          <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
               <i class="nav-icon fas fa-users"></i>
               <p>
                 Customers
+                <i class="right fas fa-angle-left"></i>
               </p>
             </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ route('customer.index') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Master List</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ route('customer.pending') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Pending Customers</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ route('customer.create') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Create New</p>
+                </a>
+              </li>           
+            </ul>
           </li>
           @endcan 
           @can('order-list')
-          <li class="nav-item has-treeview" id="order-mu">
+          <li class="nav-item has-treeview">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-inbox"></i>
               <p>
@@ -73,15 +94,36 @@
             </ul>
           </li>
           @endcan
-          @can('dsr-list') 
-          <li class="nav-item">
-            <a href="{{ route('dsr.index') }}" class="nav-link">
+          @can('dsr-list')        
+          <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
               <i class="nav-icon fas fa-chart-line"></i>
               <p>
                 DSR
+                <i class="right fas fa-angle-left"></i>
               </p>
             </a>
-          </li> 
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ route('dsr.index') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Daily Report</p>
+                </a>
+              </li>      
+              <li class="nav-item">
+                <a href="{{ route('customer.importview') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Import Customers</p>
+                </a>
+              </li> 
+              <li class="nav-item">
+                <a href="{{ route('dsr.create') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Create New</p>
+                </a>
+              </li>            
+            </ul>
+          </li>
           @endcan 
           @can('user-list')
           <li class="nav-item">
@@ -143,6 +185,7 @@
             </a>
           </li> 
           @endcan
+          @hasanyrole('Coordinator|Admin')
           <li class="nav-item has-treeview" id="order-mu">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-video"></i>
@@ -153,19 +196,20 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="{{ route('meeting.start') }}" class="nav-link">
+                <a href="{{ route('meeting.index') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Host a Meeting</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{{ route('meeting.index') }}" class="nav-link">
+                <a href="{{ route('meeting.join') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Join a Meeting</p>
                 </a>
               </li>                   
             </ul>
           </li>
+          @endhasanyrole   
           <li class="nav-item">
             <a href="{{ route('cache.clear') }}" class="nav-link">
               <i class="nav-icon fas fa-broom"></i> 

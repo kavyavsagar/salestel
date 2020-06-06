@@ -32,7 +32,7 @@ class CreateOrdersTable extends Migration
                 ->onDelete('cascade');
         });
 
-        Schema::create('order_historys', function (Blueprint $table) {
+        Schema::create('order_histories', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('order_id');
             $table->integer('order_status_id');
@@ -53,9 +53,10 @@ class CreateOrdersTable extends Migration
             $table->integer('price');
             $table->string('plan');
             $table->integer('plan_id');
-            $table->enum('plan_type', ['New', 'MRV', 'Migrated']);            
-            $table->integer('quantity');
-            $table->integer('total');
+            $table->enum('plan_type', ['New', 'MRV', 'Migrated']);                     
+            $table->integer('quantity')->default(0);
+            $table->integer('total')->default(0);
+            $table->text('phoneno')->nullable(); 
             $table->timestamps();
 
             $table->foreign('order_id')
@@ -73,5 +74,7 @@ class CreateOrdersTable extends Migration
     public function down()
     {
         Schema::dropIfExists('orders');
+        Schema::dropIfExists('order_histories');
+        Schema::dropIfExists('order_plans');
     }
 }

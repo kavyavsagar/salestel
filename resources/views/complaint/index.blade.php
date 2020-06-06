@@ -66,7 +66,7 @@
                   @endswitch
               </td>
               <td>{{ $complaint->fullname }}</td>
-              <td>{{ $complaint->status_name }}</td>
+              <td>{{ ucwords($complaint->status_name) }}</td>
               <td>{{ date("d-m-Y", strtotime($complaint->created_at)) }}</td>
               <td>
                 <a class="btn" href="{{ route('complaint.show',$complaint->id) }}" title="View Complaint"><i class="fas fa-eye"></i></a>

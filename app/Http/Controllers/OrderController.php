@@ -19,6 +19,7 @@ use App\OrderStatus;
 use App\Order;
 use App\Exports\OrderExport;
 
+
 class OrderController extends Controller
 {
     
@@ -46,9 +47,20 @@ class OrderController extends Controller
         $input = $request->all();
 
         //order status
-        $ordstatus = OrderStatus::orderBy('id','ASC')->get()
+        $ordstatus = OrderStatus::orderBy('id','ASC')
+                    ->where('id','<>', 14)
+                    ->get()
                     ->pluck('name', 'id')->toArray();
-
+        
+        //Plan
+        $plans = DB::table('order_plans')
+                    ->select('price','plan','plan_id')
+                    ->groupBy('price','plan','plan_id')            
+                    ->orderBy('plan', 'ASC')
+                    ->orderBy('price', 'ASC')
+                    ->get();         
+        
+        //$plans = DB::select( DB::raw("SELECT plan, price FROM st_order_plans group by plan, price order by plan asc, price asc"));
         // Users
         $arUser = User::all()->toArray();        
 
@@ -103,10 +115,27 @@ class OrderController extends Controller
             $query->where('orders.order_status_id','=', $input['statusid']);
         }
         if(!empty($custIds)){ 
+          
             // condition applied for search by parent or team lead/agent login or search by user
             $query->whereIn('orders.customer_id', $custIds);    
+        }else{
+            if( (isset($input['parentid']) && $input['parentid'] >0) || 
+                (isset($input['userid']) && $input['userid'] >0) ) { 
+                $query->where('orders.customer_id', 0); 
+            }
         }
-        
+
+        if(isset($input['planid']) && $input['planid'] != ""){
+            $planids = explode("_",$input['planid']);
+
+            $query->join('order_plans', function ($join) use($planids) {
+                
+                    $join->on('orders.id', '=', 'order_plans.order_id')                        
+                         ->where('order_plans.plan_id', '=', $planids[0])
+                         ->where('order_plans.price', '=', $planids[1]);
+                });
+        }
+
         if(isset($input['start_date']) && $input['start_date'] != ""
             && isset($input['end_date']) && $input['end_date'] != ""){  // Search by dates
             
@@ -115,13 +144,14 @@ class OrderController extends Controller
             
            $query->whereBetween('orders.created_at', array($from.'.000000', $to->endOfDay().'.000000' ));          
         }
-
         $query->orderBy('orders.id', 'DESC');
-        $data = $query->paginate(10);
+
+        $data = $query->paginate(25)->appends(request()->query());
 
         $fields = $input;
+
         
-        return view('order.index',compact('data', 'users', 'ordstatus', 'unique_parent', 'fields'))
+        return view('order.index',compact('data', 'users', 'ordstatus', 'unique_parent', 'fields', 'plans'))
             ->with('i', ($request->input('page', 1) - 1) * 10);
     }
     /**
@@ -190,6 +220,12 @@ class OrderController extends Controller
         if(!empty($custIds)){ 
             // condition applied for search by parent or team lead/agent login or search by user
             $query->whereIn('orders.customer_id', $custIds);    
+        
+        }else{
+            if( (isset($input['parentid']) && $input['parentid'] >0) || 
+                (isset($input['userid']) && $input['userid'] >0) ) { 
+                $query->where('orders.customer_id', 0); 
+            }
         }
         
         if(isset($input['start_date']) && $input['start_date'] != ""
@@ -202,7 +238,7 @@ class OrderController extends Controller
         }
 
         $query->orderBy('orders.id', 'DESC');
-        $data = $query->paginate(10);
+        $data = $query->paginate(25)->appends(request()->query());
 
         $fields = $input;
         
@@ -218,7 +254,38 @@ class OrderController extends Controller
         $date = now();
         return Excel::download(new OrderExport($input), 'order'.$date.'.xlsx');
     }
-  
+   
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function updatePlan()
+    {
+        //
+        $mob_prices = Pricing::orderBy('amount','ASC')->where('plan_type', 'mobile')->get()
+                    ->pluck('amount', 'id')->toArray();
+
+        $fxd_prices = Pricing::orderBy('amount','ASC')->where('plan_type', 'fixed')->get()
+                    ->pluck('amount', 'id')->toArray();
+
+        $mob_plans = Plan::orderBy('plan','ASC')->where('plan_type', 'mobile')->get()
+                    ->pluck('plan', 'id')->toArray();
+
+        $fxd_plans = Plan::orderBy('plan','ASC')->where('plan_type', 'fixed')->get()
+                    ->pluck('plan', 'id')->toArray();
+
+       
+
+        $users = User::all()->pluck('fullname', 'id')->toArray(); 
+
+        $customers = Customer::all()->pluck('company_name', 'id')->toArray(); 
+
+        return view('order.updateplan',
+            compact('users', 'customers', 'mob_prices', 'fxd_prices', 'mob_plans', 'fxd_plans'));
+
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -239,15 +306,17 @@ class OrderController extends Controller
         $fxd_plans = Plan::orderBy('plan','ASC')->where('plan_type', 'fixed')->get()
                     ->pluck('plan', 'id')->toArray();
 
-        $ordstatus = OrderStatus::orderBy('id','ASC')->get()
+        $ordstatus = OrderStatus::orderBy('id','ASC')
+                    ->where('id','<>', 14)
+                    ->get()
                     ->pluck('name', 'id')->toArray();
 
         $users = User::all()->pluck('fullname', 'id')->toArray(); 
 
         $customers = Customer::all()->pluck('company_name', 'id')->toArray(); 
 
-
-        return view('order.create',compact('users', 'customers', 'mob_prices', 'fxd_prices', 'mob_plans', 'fxd_plans', 'ordstatus'));
+        return view('order.create',
+            compact('users', 'customers', 'mob_prices', 'fxd_prices', 'mob_plans', 'fxd_plans', 'ordstatus'));
 
     }
 
@@ -263,6 +332,7 @@ class OrderController extends Controller
         $this->validate($request, [
             'company_name' => 'required',
             'account_no' => 'required',
+            'location' => 'required',
             'authority_name' => 'required',          
             'authority_phone' => 'required',
             'technical_name' => 'required',
@@ -270,7 +340,7 @@ class OrderController extends Controller
             'technical_phone' => 'required',                
             'refferedby' => 'required',
             'image' => 'required',
-            'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image.*' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048',
             'order_status' => 'required'     
         ]); 
 
@@ -280,8 +350,12 @@ class OrderController extends Controller
             //update customer
             $cid = $input['customerid'];
             $this->validate($request, [
-                'authority_email' => 'required|email|unique:customers,authority_email,'.$cid, 
+                 'authority_email' => 'required|email|unique:customers,authority_email,'.$cid, 
                 ]);
+            // $exists = Customer::where('authority_email',$input['authority_email'])
+            //                 ->where('id', '<>' , $cid)
+            //                 ->count();
+            // if(!$exists)
             $input['customer_id'] = app(CustomerController::class)->updateCustomer($input, $request, $cid);
              
         }else{
@@ -292,17 +366,16 @@ class OrderController extends Controller
             $input['customer_id'] = app(CustomerController::class)->createCustomer($input, $request); 
         }     
 
-        // For MOBILE
-        if(isset($input['mobile']) && $input['mobile']){  
-            $input['mobile'] = json_decode($input['mobile']);  
-
+        $res_m = $res_f = '';
+        // For MOBILE       
+        $input['mobile'] = json_decode($input['mobile']);  
+        if(isset($input['mobile']) && !empty($input['mobile'])){  
             $res_m = $this->insertOrderPlan($input, 'mobile');
         }
 
         // For FIXED
-        if(isset($input['fixed']) && $input['fixed']){
-            $input['fixed'] = json_decode($input['fixed']);    
-
+        $input['fixed'] = json_decode($input['fixed']);
+        if(isset($input['fixed']) && !empty($input['fixed']) ){            
             $res_f = $this->insertOrderPlan($input, 'fixed');
         }
         
@@ -334,6 +407,7 @@ class OrderController extends Controller
                             "plan_type"  => $arplan->plan_type,    
                             "quantity"   => $arplan->qty,
                             "total"      => $arplan->total,
+                            "phoneno"    => (isset($arplan->phoneno) && $arplan->phoneno)? $arplan->phoneno: '',
                             "created_at" => \Carbon\Carbon::now(), # new \Datetime()
                             "updated_at" => \Carbon\Carbon::now()  # new \Datetime()
                         ];   
@@ -355,7 +429,7 @@ class OrderController extends Controller
                     "updated_at"      => \Carbon\Carbon::now()  # new \Datetime()
                     ];
 
-        DB::table('order_historys')->insert($status_insert);
+        DB::table('order_histories')->insert($status_insert);
 
 
         #### Order Plans
@@ -393,6 +467,7 @@ class OrderController extends Controller
                     "plan_type"  => $arplan->plan_type,    
                     "quantity"   => $arplan->qty,
                     "total"      => $arplan->total,
+                    "phoneno"    => (isset($arplan->phoneno) && $arplan->phoneno)? $arplan->phoneno: '',
                     "created_at" => \Carbon\Carbon::now(), # new \Datetime()
                     "updated_at" => \Carbon\Carbon::now()  # new \Datetime()
                 ];
@@ -427,7 +502,7 @@ class OrderController extends Controller
                         "updated_at"      => \Carbon\Carbon::now()  # new \Datetime()
                         ];
 
-            DB::table('order_historys')->insert($status_insert);
+            DB::table('order_histories')->insert($status_insert);
 
         }
        
@@ -457,11 +532,11 @@ class OrderController extends Controller
         $documents = DB::table('customer_documents')->where('customer_id',$order->customer_id)->get()->pluck('document_path')->toArray();
 
         $ord_plans = DB::table('order_plans AS op')
-                    ->select('op.price', 'op.plan', 'op.quantity', 'op.plan_type', 'op.total')   
+                    ->select('op.price', 'op.plan', 'op.quantity', 'op.plan_type', 'op.total', 'op.phoneno')   
                     ->where('op.order_id',$id)
                     ->get();
 
-        $ord_history = DB::table('order_historys AS oh')
+        $ord_history = DB::table('order_histories AS oh')
                     ->orderBy('oh.id','DESC')
                     ->join('order_statuses AS os', 'os.id', '=', 'oh.order_status_id')
                     ->join('users AS us', 'us.id', '=', 'oh.added_by')
@@ -469,7 +544,7 @@ class OrderController extends Controller
                     ->where('oh.order_id',$id)
                     ->get();
         
-        $ordstatus = OrderStatus::orderBy('id','ASC')->get()
+        $ordstatus = OrderStatus::orderBy('id','ASC')->where('id','<>', 14)->get()
                     ->pluck('name', 'id')->toArray();                    
 
 
@@ -497,8 +572,12 @@ class OrderController extends Controller
         // save activation date only on activation complete
         if(isset($input['activation_date']) && $input['activation_date']!='' && $statusid == 13){
             $date = date("Y-m-d", strtotime($input['activation_date']));
-
             $update['activation_date'] = $date;
+
+            // customer activation
+            $upstatus = array('status' => 1);
+            $customer = Customer::find($order->customer_id);
+            $customer->update($upstatus);
         }
 
         $oldorderstatus = $order->order_status_id;
@@ -515,7 +594,7 @@ class OrderController extends Controller
                         "updated_at"      => \Carbon\Carbon::now()  # new \Datetime()
                         ];
 
-            DB::table('order_historys')->insert($status_insert);
+            DB::table('order_histories')->insert($status_insert);
         }
 
         ## Update Order
@@ -549,7 +628,7 @@ class OrderController extends Controller
         $fxd_plans = Plan::orderBy('plan','ASC')->where('plan_type', 'fixed')->get()
                     ->pluck('plan', 'id')->toArray();
 
-        $ordstatus = OrderStatus::orderBy('id','ASC')->get()
+        $ordstatus = OrderStatus::orderBy('id','ASC')->where('id','<>', 14)->get()
                     ->pluck('name', 'id')->toArray();
 
         $users = User::all()->pluck('fullname', 'id')->toArray(); 
@@ -561,10 +640,10 @@ class OrderController extends Controller
         $documents = DB::table('customer_documents')->where('customer_id',$order->customer_id)->get()->pluck('document_path')->toArray();
 
         $arplans = DB::table('order_plans')
-                    ->select('price', 'plan', 'plan_id','plan_type', 'quantity', 'total', 'id AS order_planid')
+                    ->select('price', 'plan', 'plan_id','plan_type', 'quantity', 'total','phoneno', 'id AS order_planid')
                     ->where('order_id',$id)->get();
         
-        $history = DB::table('order_historys AS oh')
+        $history = DB::table('order_histories AS oh')
                     ->orderBy('oh.id','DESC')
                     ->join('order_statuses AS os', 'os.id', '=', 'oh.order_status_id')
                     ->join('users AS us', 'us.id', '=', 'oh.added_by')
@@ -590,6 +669,7 @@ class OrderController extends Controller
             'orderid'   => 'required',
             'company_name' => 'required',
             'account_no' => 'required',
+            'location' => 'required',
             'authority_name' => 'required',          
             'authority_phone' => 'required',
             'technical_name' => 'required',
@@ -597,7 +677,7 @@ class OrderController extends Controller
             'technical_phone' => 'required',                
             'refferedby' => 'required',
             //'image' => 'required',
-            'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image.*' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048',
             'order_status' => 'required'     
         ]); 
 
@@ -609,8 +689,12 @@ class OrderController extends Controller
             //update customer
             $cid = $input['customerid'];
             $this->validate($request, [
-                'authority_email' => 'required|email|unique:customers,authority_email,'.$cid, 
+                 'authority_email' => 'required|email|unique:customers,authority_email,'.$cid, 
                 ]);
+            // $exists = Customer::where('authority_email',$input['authority_email'])
+            //                 ->where('id', '<>' , $cid)
+            //                 ->count();
+            // if(!$exists)
             $input['customer_id'] = app(CustomerController::class)->updateCustomer($input, $request, $cid);
              
         }else{
@@ -655,7 +739,7 @@ class OrderController extends Controller
         DB::table('order_plans')->where('order_id',$id)->delete();
 
         // Order Status history
-        DB::table('order_historys')->where('order_id',$id)->delete();
+        DB::table('order_histories')->where('order_id',$id)->delete();
 
         // Order
         Order::find($id)->delete(); 

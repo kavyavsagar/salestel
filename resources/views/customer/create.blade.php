@@ -124,14 +124,17 @@
                         <label>Upload all documents:</label>
                         <div class="input-group">
                             <div class="custom-file">
-                                <input type="file" class="custom-file-input" id="file-input" name="image[]" multiple="">
+                                <input type="file" class="custom-file-input" id="file-input" name="image[]" multiple="" 
+                                        accept="image/jpeg,image/jpg,image/png,image/bmp,application/pdf" />
                                 <label class="custom-file-label" for="file-input">Choose file</label>
                             </div>
                             <div class="input-group-append">
                                 <span class="input-group-text" id="">Upload</span>
                             </div>
                         </div>
-                        <span class="text-danger">{{ $errors->first('image') }}</span>           
+                        <p class="small text-muted mt-1">documents should be in this formats (jpeg, png, jpg, bmp, pdf)</p>
+                        <div id="file-error" class="text-danger mt-1"></div>
+                        <span class="text-danger">{{ $errors->first('image') }}</span>  
                     </div>        
                 </div>  
                 <div class="col-xs-12 col-sm-6 col-md-6">    
@@ -182,16 +185,26 @@ $(document).ready(function(){
         var data = $(this)[0].files; //this file data
          
         $.each(data, function(index, file){ //loop though each file
-            if(/(\.|\/)(gif|jpe?g|png)$/i.test(file.type)){ //check supported file type
+            if(/(\.|\/)(bmp|jpe?g|png)$/i.test(file.type) || file.type.match('application/pdf')){ //check supported file type
                 var fRead = new FileReader(); //new filereader
                 fRead.onload = (function(file){ //trigger function on successful read
-                return function(e) {
-                    var img = $('<img/>').addClass('img-fluid img-thumbnail m-1 mht-100').attr('src', e.target.result); //create image element 
-                    $('#thumb-output').append(img); //append image to output element
-                };
+                    return function(e) {                           
+                        let preview = '';
+                        if(file.type.match('application/pdf')){
+                            preview = $('<span/>').addClass('text-danger m-1').html(file.name);
+                        }else{
+                            preview = $('<img/>').addClass('img-fluid img-thumbnail m-1 mht-100').attr('src', e.target.result); //create image element 
+                        }
+                        
+                        $('#thumb-output').append(preview); //append image to output element
+                    };
                 })(file);
                 fRead.readAsDataURL(file); //URL representing the file's data.
-            }
+                $('#file-error').html("");
+            }else{                        
+                $('#file-error').html("Selected file extension not allowed");
+                return;
+            }; 
         });
          
     }else{

@@ -1,10 +1,30 @@
 {
-    "name": "Telecom Sales And User Management",
+    "name": "Telecom Sales Management",
     "short_name": "TSM",
     "description": "A web application for telecom sales management",
     "lang": "en-US",
-    "start_url": "/", 
+    "start_url": "/?from=homescreen", 
     "icons": [
+        {
+          "src": "image/logo/android-icon-48x48.png",
+          "sizes": "48x48",
+          "type": "image/png"
+        },
+        {
+          "src": "image/logo/icon-72x72.png",
+          "sizes": "72x72",
+          "type": "image/png"
+        },
+        {
+          "src": "image/logo/icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        },
+        {
+          "src": "image/logo/icon-144x144.png",
+          "sizes": "144x144",
+          "type": "image/png"
+        },
         {
             "src": "image/logo/android-chrome-192x192.png",
             "sizes": "192x192",

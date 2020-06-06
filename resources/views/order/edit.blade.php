@@ -73,7 +73,7 @@
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
                               <label>Customer:</label>
-                              <select class="form-control" name="customerid" id="customerid" readonly="true">   
+                              <select class="form-control" name="customerid" id="customerid" readonly="true" >   
                                 <option value="0">-- None --</option>                
                                 @foreach ($customerList as $key => $value)
                                   <option value="{{ $key }}" {{ ($key == $customer->id) ? 'selected': ''}}> 
@@ -162,13 +162,16 @@
                                 <label>Upload all documents:</label>
                                 <div class="input-group">
                                     <div class="custom-file">
-                                        <input type="file" class="custom-file-input" id="file-input" name="image[]" multiple="">
+                                        <input type="file" class="custom-file-input" id="file-input" name="image[]" multiple="" 
+                                        accept="image/jpeg,image/jpg,image/png,image/bmp,application/pdf" />
                                         <label class="custom-file-label" for="file-input">Choose file</label>
                                     </div>
                                     <div class="input-group-append">
                                         <span class="input-group-text" id="">Upload</span>
                                     </div>
                                 </div>
+                                <p class="small text-muted mt-1">documents should be in this formats (jpeg, png, jpg, bmp, pdf)</p>
+                                <div id="file-error" class="text-danger mt-1"></div>
                                 <span class="text-danger">{{ $errors->first('image') }}</span>           
                             </div>       
                         </div>
@@ -232,7 +235,7 @@
                             </select>          
                         </div>
                         </div>
-                        <div class="col-xs-12 col-sm-3 col-md-3">
+                        <div class="col-xs-12 col-sm-2 col-md-2">
                         <div class="form-group">
                             <select class="form-control" name="mobile_plan" id="mplan"> 
                                 <option value="">--PLANS--</option>
@@ -249,17 +252,27 @@
                                 <select class="form-control" name="plan_type" id="mptype"> 
                                     <option value="">--PLAN TYPE--</option>
                                     <option value="New">New</option>
-                                    <option value="MRV">MRV</option>
+                                    <option value="MNP">MNP</option>
                                     <option value="Migrated">Migrated</option>
+                                    <option value="Renewal">Renewal</option>
+                                    <option value="Upgrade">Upgrade</option>
+                                    <option value="Downgrade">Downgrade</option>
+                                    <option value="Vas">Vas</option>
+                                    <option value="RPC">RPC - Rate Plan Change</option>
                                 </select>          
                             </div>
                         </div>
                         <div class="col-xs-12 col-sm-2 col-md-2">
                             <div class="form-group">
-                                <input type="number" name="mquantity" id="mqty" class="form-control" placeholder="Quantity"/>
+                                <input type="number" name="mquantity" id="mqty" class="form-control" placeholder="Quantity" value="0"/>
                             </div>
                         </div>
-                        <div class="col-xs-12 col-sm-3 col-md-3">
+                         <div class="col-xs-12 col-sm-2 col-md-2">
+                            <div class="form-group">
+                                <textarea name="phoneno" id="phoneno" class="form-control" placeholder="Phone Nos"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-2 col-md-2">
                             <div class="form-group">
                                 <button type="button" class="btn btn-primary" id="mobile-add">Add New</button>
                             </div>
@@ -272,6 +285,7 @@
                               <th scope="col">MRC</th>
                               <th scope="col">PLAN</th>                              
                               <th scope="col">Type</th>
+                              <th scope="col">PhoneNo.</th>
                               <th scope="col">QTY</th>
                               <th scope="col">TOTAL (AED)</th>
                               <th scope="col">ACTION</th>
@@ -283,6 +297,7 @@
                                     <th scope="row">{{$plan->price}}</th>
                                     <td>{{$plan->plan}}</td>
                                     <td>{{$plan->plan_type}}</td>
+                                    <td>{{$plan->phoneno}}</td>
                                     <td>{{$plan->quantity}}</td>
                                     <td>{{$plan->total}}</td>
                                     <td><span id="inplan{{$key+1}}" class="d-none">{{ json_encode($plan) }}</span>
@@ -343,14 +358,19 @@
                                 <select class="form-control" name="fixed_type" id="fptype"> 
                                     <option value="">--PLAN TYPE--</option>
                                     <option value="New">New</option>
-                                    <option value="MRV">MRV</option>
+                                    <option value="MNP">MNP</option>
                                     <option value="Migrated">Migrated</option>
+                                    <option value="Renewal">Renewal</option>
+                                    <option value="Upgrade">Upgrade</option>
+                                    <option value="Downgrade">Downgrade</option>
+                                    <option value="Vas">Vas</option>
+                                    <option value="RPC">RPC - Rate Plan Change</option>
                                 </select>          
                             </div>
                         </div>
                         <div class="col-xs-12 col-sm-2 col-md-2">
                             <div class="form-group">
-                                <input type="number" name="fquantity" id="fqty" class="form-control" placeholder="Quantity"/>                
+                                <input type="number" name="fquantity" id="fqty" class="form-control" placeholder="Quantity" value="0"/>                
                             </div>
                         </div>
                         <div class="col-xs-12 col-sm-3 col-md-3">
@@ -462,6 +482,7 @@
                             <div class="form-group float-right">
                                 <button type="button" class="btn btn-outline-secondary btnPrevious mr-1" data-id="{{$order->plan_type}}">Previous</button>
                                 <button type="submit" class="btn btn-outline-success btn-submit">Confirm & Save</button>
+                                <span id="loader"></span>
                             </div>
                         </div>
                     </div>
@@ -512,15 +533,20 @@ $(document).ready(function(){
         let price = parseInt($('#mprice').val()),
             splan = $('#mplan').val(),
             ptype = $('#mptype').val(),
+            phoneno = $('#phoneno').val(),
             qty = parseInt($('#mqty').val()),
-            total = parseInt(price * qty),
-            plan = splan.split("-");    
+            total = (qty >0)? parseInt(price * qty): 0,
+            plan = splan.split("-"); 
 
-        let mobd = JSON.stringify({"price": price, "planid": parseInt(plan[0]), "plan": plan[1],"plan_type": ptype, "qty": qty, "total": total});        
+        if(ptype == 'Upgrade' || ptype == 'Downgrade'){
+            qty = total = 0;
+        }   
 
-        let tblrow = '<tr id="mrw-'+rowCounter+'"><th scope="row">'+ price +'</th><td>'+ plan[1] +'</td><td>'+ ptype +'</td><td>'+ qty +'</td><td>'+total +'</td><td><span id="inplan'+rowCounter+'" class="d-none">'+mobd+'</span><a href="javascript:void(0);" class="del-mrow" data-id="'+rowCounter+'" title="Delete"><i class="fas fa-trash"></i></a></td></tr>';
+        let mobd = JSON.stringify({"price": price, "planid": parseInt(plan[0]), "plan": plan[1],"plan_type": ptype,"phoneno": phoneno, "qty": qty, "total": total});        
 
-        if(price && plan &&  qty){
+        let tblrow = '<tr id="mrw-'+rowCounter+'"><th scope="row">'+ price +'</th><td>'+ plan[1] +'</td><td>'+ ptype +'</td><td>'+ phoneno +'</td><td>'+ qty +'</td><td>'+total +'</td><td><span id="inplan'+rowCounter+'" class="d-none">'+mobd+'</span><a href="javascript:void(0);" class="del-mrow" data-id="'+rowCounter+'" title="Delete"><i class="fas fa-trash"></i></a></td></tr>';
+
+        if(price && plan && ptype){
             $('#tbl-mob-plans tbody').append(tblrow);     
         }
     }); 
@@ -584,8 +610,8 @@ $(document).ready(function(){
         let fixd = JSON.stringify({"price": price, "planid": parseInt(plan[0]), "plan": plan[1], "plan_type": fptype, "qty": qty, "total": total});        
 
         let tblrow = '<tr id="frw-'+rowFCounter+'"><th scope="row">'+ price +'</th><td>'+ plan[1] +'</td><td>'+ fptype +'</td><td>'+ qty +'</td><td>'+total +'</td><td><span id="finplan'+rowFCounter+'" class="d-none">'+fixd+'</span><a href="javascript:void(0);" class="del-frow" data-id="'+rowFCounter+'"title="Delete"><i class="fas fa-trash"></i></a></td></tr>';
-
-        if(price && plan &&  qty){
+      
+        if(price && plan && fptype){
             $('#tbl-fxd-plans tbody').append(tblrow);     
         }
     }); 
@@ -659,8 +685,10 @@ $(document).ready(function(){
     });
 
     /********************* POST FORM **************************/
+    var loading = false;
     $('#order_placed').on('submit', function(e){ 
         e.preventDefault();
+        loading = true;
 
         var mobData = [], 
             fxdData =[];
@@ -687,6 +715,9 @@ $(document).ready(function(){
             formData.append('mobile', JSON.stringify(mobData));
             formData.append('fixed', JSON.stringify(fxdData));
 
+        if(loading){
+            $('#loader').html('Loading...');
+        }
         $.ajax({
             type:'POST',
             url:"{{ route('order.updateOrder') }}",
@@ -697,6 +728,8 @@ $(document).ready(function(){
             processData: false,        
             success:function(data){
               if(data.success){
+                loading = false;
+                $('#loader').html('');
                 toastr.success(data.success); 
 
                 setTimeout(function(){
@@ -706,9 +739,19 @@ $(document).ready(function(){
               }
             },
             error:function(data){
-              if(data.responseJSON)
-                toastr.error(data.responseJSON.message);  
-              return;
+                let err_str = '';  
+
+                if(data.responseJSON.errors){
+                    loading = false;
+                    $('#loader').html('');
+                    err_str = '<dl class="row">';  
+                    $.each(data.responseJSON.errors, function(key, val){
+                        err_str += '<dt class="col-sm-4">'+key.replace("_", " ")+ ' </dt><dd class="col-sm-8">'+ val+ '</dd>';
+                    });
+                    err_str += '</dl>';  
+                    toastr.error(err_str);  
+                    return;
+                }
             }
         });
   
@@ -722,22 +765,33 @@ $(document).ready(function(){
             var data = $(this)[0].files; //this file data
              
             $.each(data, function(index, file){ //loop though each file
-                if(/(\.|\/)(gif|jpe?g|png)$/i.test(file.type)){ //check supported file type
+                if(/(\.|\/)(bmp|jpe?g|png)$/i.test(file.type) || file.type.match('application/pdf')){ //check supported file type
                     var fRead = new FileReader(); //new filereader
                     fRead.onload = (function(file){ //trigger function on successful read
-                    return function(e) {
-                        var img = $('<img/>').addClass('img-fluid img-thumbnail m-1 mht-100').attr('src', e.target.result); //create image element 
-                        $('#thumb-output').append(img); //append image to output element
-                    };
+                        return function(e) {                           
+                            let preview = '';
+                            if(file.type.match('application/pdf')){
+                                preview = $('<span/>').addClass('text-danger m-1').html(file.name);
+                            }else{
+                                preview = $('<img/>').addClass('img-fluid img-thumbnail m-1 mht-100').attr('src', e.target.result); //create image element 
+                            }
+                            
+                            $('#thumb-output').append(preview); //append image to output element
+                        };
                     })(file);
                     fRead.readAsDataURL(file); //URL representing the file's data.
-                }
+                    $('#file-error').html("");
+                }else{                        
+                    $('#file-error').html("Selected file extension not allowed");
+                    return;
+                }; 
             });
              
         }else{
             alert("Your browser doesn't support File API!"); //if File API is absent
         }
     });
+
 
 });
 

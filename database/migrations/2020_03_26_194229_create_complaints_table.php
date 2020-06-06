@@ -20,12 +20,25 @@ class CreateComplaintsTable extends Migration
             $table->enum('priority', ['high','medium','low']);
             $table->integer('reported_by');
             $table->string('filepath')->nullable();
-            $table->integer('attended_by')->default(0);
-            $table->text('comment')->nullable();
-            $table->tinyInteger('status')->default(1);
+            $table->integer('status')->default(1);       
             $table->timestamps();
  
         });
+
+        Schema::create('complaint_histories', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('complaint_id');
+            $table->integer('status_id');
+            $table->text('comment')->nullable();
+            $table->integer('added_by'); 
+            $table->timestamps();
+
+            $table->foreign('complaint_id')
+                ->references('id')
+                ->on('complaints')
+                ->onDelete('cascade');
+        });
+
 
         Schema::create('complaint_statuses', function (Blueprint $table) {
             $table->id();
@@ -41,5 +54,6 @@ class CreateComplaintsTable extends Migration
     public function down()
     {
         Schema::dropIfExists('complaints');
+        Schema::dropIfExists('complaint_histories');
     }
 }

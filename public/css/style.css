@@ -10,3 +10,51 @@
 .table-hover tbody tr:hover {
     background-color: #cfdae8;
 }
+.auto-comp{
+	z-index:999; 
+	position:absolute; 
+	cursor: pointer; 
+	height: 200px; 
+	overflow: auto;
+	width: 98%;
+}
+.auto-comp li:hover{
+	background: #eee;
+}
+
+@media all and (display-mode: standalone) {
+  body {
+    background-color: yellow;
+  }
+}
+
+
+@media (max-width: 575.98px) { 
+	.embed-responsive{
+		min-height: 520px;
+	}
+	.auto-comp{
+		width: 88%;
+	}
+}
+
+@media (max-width: 767.98px) { 
+	.embed-responsive{
+		min-height: 550px;
+	}
+	.auto-comp{
+		width: 93%;
+	}
+}
+
+@media (max-width: 991.98px) { 
+	.embed-responsive{
+		min-height: 580px;
+	}
+}
+
+@media (max-width: 1199.98px) { 
+	.embed-responsive{
+		min-height: 600px;
+	}
+}

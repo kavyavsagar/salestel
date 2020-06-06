@@ -48,7 +48,7 @@
                   <select class="form-control" name="userid">   
                     <option value="0">-- By User --</option>                
                     @foreach ($users as $key => $value)
-                      <option value="{{ $key }}" {{ (count($fields)>0 && $key == $fields["userid"]) ? 'selected': ''}}> 
+                      <option value="{{ $key }}" {{ (isset( $fields["userid"]) && $key == $fields["userid"]) ? 'selected': ''}}> 
                           {{ $value }} 
                       </option>
                     @endforeach    
@@ -60,7 +60,7 @@
                   <select class="form-control" name="parentid">   
                     <option value="0">-- By Team --</option>                
                     @foreach ($unique_parent as $key => $value)
-                      <option value="{{ $key }}" {{ (count($fields)>0 && $key == $fields["parentid"]) ? 'selected': ''}}> 
+                      <option value="{{ $key }}" {{ (isset( $fields["parentid"]) && $key == $fields["parentid"]) ? 'selected': ''}}> 
                           {{ $users[$value] }} 
                       </option>
                     @endforeach    
@@ -71,7 +71,7 @@
                   <select class="form-control" name="statusid">   
                     <option value="0">-- By Status --</option>                
                     @foreach ($ordstatus as $key => $value)
-                      <option value="{{ $key }}" {{ (count($fields)>0 && $key == $fields["statusid"]) ? 'selected': ''}}> 
+                      <option value="{{ $key }}" {{ (isset( $fields["statusid"]) && $key == $fields["statusid"]) ? 'selected': ''}}> 
                           {{ ucwords(str_replace("_"," ",$value)) }} 
                       </option>
                     @endforeach    
@@ -81,13 +81,22 @@
                 <div class="form-group mr-2">
                   <div class="input-group">
                     <input type="hidden" name="start_date" id="start_date" 
-                    value="{{ (count($fields)>0)? $fields['start_date'] : '' }}">
-                    <input type="hidden" name="end_date" id="end_date" value="{{ (count($fields)>0)? $fields['end_date'] : '' }}">
+                    value="{{ isset( $fields['start_date']) ? $fields['start_date'] : '' }}">
+                    <input type="hidden" name="end_date" id="end_date" value="{{ isset( $fields['end_date']) ? $fields['end_date'] : '' }}">
                     <button type="button" class="btn btn-default float-right" id="daterange-btn">
                       <i class="far fa-calendar-alt"></i> Date range picker
                       <i class="fas fa-caret-down"></i>
                     </button>
                   </div>
+                </div>
+                <div class="form-group mr-2">
+                  <select class="form-control" name="planid">   
+                    <option value="0">-- Plan --</option>                
+                    @foreach ($plans as $key => $plan)
+                      <option value="{{ $plan->plan_id.'_'.$plan->price }}">{{ ucwords($plan->plan).' - '. $plan->price }} 
+                      </option>
+                    @endforeach    
+                  </select>
                 </div>
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary btn-submit mr-2">Search</button>

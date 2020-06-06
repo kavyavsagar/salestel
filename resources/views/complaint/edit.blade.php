@@ -47,8 +47,9 @@
                 </div>
                 @endif
                 <div class="form-group">
-                    <label for="acc_no">Customer Account No.</label>
-                    {!! Form::text('customer_acc_no', null, array('placeholder' => 'Account No.','class' => 'form-control', 'id' => 'acc_no')) !!}
+                     <label for="acc_no">Company / Account No.</label>
+                    {!! Form::text('customer_acc_no', null, array('placeholder' => 'Company / Account No.','class' => 'form-control', 'id' => 'customerext')) !!}
+                    <div id="companyList"></div>
                 </div> 
                 <div class="form-group">
                     <label for="complaint">Complaint</label>
@@ -81,13 +82,15 @@
                     <label>Upload all documents:</label>
                     <div class="input-group">
                         <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="file-input" name="filepath">
+                            <input type="file" class="custom-file-input" id="file-input" name="filepath" accept="image/jpeg,image/jpg,image/png,image/bmp,application/pdf" />
                             <label class="custom-file-label" for="file-input">Choose file</label>
                         </div>
                         <div class="input-group-append">
                             <span class="input-group-text" id="">Upload</span>
                         </div>
                     </div>
+                    <p class="small text-muted mt-1">documents should be in this formats (jpeg, png, jpg, bmp, pdf)</p>
+                    <div id="file-error" class="text-danger mt-1"></div>
                     <span class="text-danger">{{ $errors->first('filepath') }}</span>           
                 </div>
                 <div class="form-group">
@@ -130,13 +133,47 @@ $(document).ready(function(){
                 };
                 })(file);
                 fRead.readAsDataURL(file); //URL representing the file's data.
-            }
+                $('#file-error').html("");
+            }else{              
+                $('#file-error').html("Selected file extension not allowed");
+                return;
+            };
         });
          
     }else{
         alert("Your browser doesn't support File API!"); //if File API is absent
     }
  });
+
+ /*************************  ********************************/
+  $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+    $('#customerext').keyup(function(){ 
+        var query = $(this).val();
+        if(query != '')
+        {
+        // var _token = $('input[name="_token"]').val();
+        $.ajax({
+            url:"{{ route('customer.fetch') }}",
+            method:"POST",
+            data:{query:query}, //, _token:_token
+            success:function(data){
+              $('#companyList').fadeIn();  
+              $('#companyList').html(data);
+            }
+        });
+        }
+    });
+
+    $(document).on('click', '#companyList > ul > li', function(){  
+        let str = $(this).text();
+        $('#customerext').val(str);        
+        $('#companyList').fadeOut();        
+
+    }); 
 }); 
 </script>
 @endsection

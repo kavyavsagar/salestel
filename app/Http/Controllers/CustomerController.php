@@ -8,6 +8,10 @@ use Illuminate\Http\Request;
 use Redirect;
 use DB;
 use Validator,Response,File;
+use App\Imports\CustomerImport;
+use App\Imports\RetentionImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\HeadingRowImport;
 
 class CustomerController extends Controller
 {
@@ -48,6 +52,7 @@ class CustomerController extends Controller
         $query = DB::table('customers')
             ->join('users', 'users.id', '=', 'customers.refferedby')
             ->select('users.fullname', 'customers.*')
+            ->where('customers.status', 1)
             ->orderBy('customers.id', 'DESC');
 
         if(auth()->user()->hasAnyRole('Agent', 'Team Lead')){           
@@ -56,6 +61,35 @@ class CustomerController extends Controller
         $data = $query->get();
 
         return view('customer.index',compact('data'));
+    }
+
+    public function pending(Request $request)
+    {
+        $Team = [];
+        
+        array_push($Team, auth()->user()->id);
+
+        if(auth()->user()->hasRole('Team Lead')){
+            $tusers =  User::where('parentid', '=', auth()->user()->id)
+                    ->get()
+                    ->pluck('id')->toArray();
+
+            array_push($Team, $tusers);
+        }
+
+
+        $query = DB::table('customers')
+            ->join('users', 'users.id', '=', 'customers.refferedby')
+            ->select('users.fullname', 'customers.*')
+            ->where('customers.status', 0)
+            ->orderBy('customers.id', 'DESC');
+
+        if(auth()->user()->hasAnyRole('Agent', 'Team Lead')){           
+            $query->whereIn('refferedby', $Team);
+        }
+        $data = $query->get();
+
+        return view('customer.pending',compact('data'));
     }
 
     /**
@@ -81,7 +115,8 @@ class CustomerController extends Controller
         //
         $this->validate($request, [
             'company_name' => 'required',
-            'account_no' => 'required',
+            //'account_no' => 'required',
+            'location' => 'required',
             'authority_name' => 'required',
             'authority_email' => 'required|email|unique:customers,authority_email',
             'authority_phone' => 'required',
@@ -89,11 +124,11 @@ class CustomerController extends Controller
             'technical_email' => 'required|email',
             'technical_phone' => 'required',                
             'refferedby' => 'required',
-            'image' => 'required',
-            'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'             
+            //'image' => 'required',
+            'image.*' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048'         
         ]); 
         
-        $input = $request->all();
+        $input = $request->all();        
        
         $customer_id = $this->createCustomer($input, $request); 
                
@@ -116,8 +151,9 @@ class CustomerController extends Controller
             'technical_name' => $input['technical_name'],
             'technical_email' => $input['technical_email'],
             'technical_phone' => $input['technical_phone'],
-            'refferedby' => $input['refferedby']
+            'refferedby' => $input['refferedby']? $input['refferedby'] : auth()->user()->id
         ];
+     
         $customer = Customer::create($cust_insert);
         $insert = [];
 
@@ -162,7 +198,7 @@ class CustomerController extends Controller
             ->join('order_statuses AS os', 'os.id', '=', 'orders.order_status_id')
             ->join('order_plans AS op', 'op.order_id', '=', 'orders.id')
             ->join('customers', 'customers.id', '=', 'orders.customer_id')
-            ->select('os.name AS status', 'orders.total_amount', 'orders.created_at', 'orders.id', 'orders.plan_type', 'op.price', 'op.plan', 'op.quantity', 'op.plan_type AS ptype', 'op.total')
+            ->select('os.name AS status', 'orders.total_amount', 'orders.created_at', 'orders.id', 'orders.plan_type', 'op.price', 'op.plan', 'op.quantity', 'op.plan_type AS ptype', 'op.total', 'op.phoneno')
             ->where('orders.customer_id', $id)
             ->orderBy('orders.id','DESC')
             ->get();
@@ -178,11 +214,37 @@ class CustomerController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function getCustomer($id)
-    {
+    {       
         //
-        $customer = Customer::find($id);
+        $customer = DB::table('customers')
+                    ->where('account_no', '=', "{$id}")
+                    ->orWhere('company_name', 'LIKE', "{$id}")
+                    ->first();
+
+        //Customer::where('account_no', '=', trim($id) )->first();
 
         return response()->json(['success'=>'Fetch customer successfully', 'customer' => json_encode($customer)]);
+    }
+
+    public function fetchCustomer(Request $request)
+    {
+
+        if($request->get('query') && strlen($request->get('query')) >2)
+        {
+            $query = $request->get('query');
+            $data = DB::table('customers')
+                    ->where('account_no', 'LIKE', "%{$query}%")
+                    ->orWhere('company_name', 'LIKE', "%{$query}%")
+                    ->get();
+
+            $output = '<ul class="list-group auto-comp">';
+            foreach($data as $row)
+            {
+               $output .= '<li class="list-group-item">'.$row->company_name.' <b>|</b> <span class="text-info">'.$row->account_no.'</span></li>';
+            }
+            $output .= '</ul>';
+            echo $output;
+        }
     }
 
     /**
@@ -215,23 +277,35 @@ class CustomerController extends Controller
         //
         $this->validate($request, [
             'company_name' => 'required',
-            'account_no'   => 'required',
+           // 'account_no'   => 'required',
+            'location' => 'required',
             'authority_name' => 'required',
-            'authority_email' => 'required|email|unique:customers,authority_email,'.$id,              
+            'authority_email' => 'required|email|unique:customers,authority_email,'.$id,          
             'authority_phone' => 'required',
             'technical_name' => 'required',
             'technical_email' => 'required|email',
             'technical_phone' => 'required',                
             'refferedby' => 'required',
             //'image' => 'required',
-            'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'  
+            'image.*' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048' 
         ]);
-    
-        $input = $request->all(); 
-        $customerId = $this->updateCustomer($input, $request, $id);
-    
-        return redirect()->route('customer.index')
-                        ->with('success','Customer updated successfully');
+
+        // $exists = Customer::where('authority_email',$input['authority_email'])
+        //                     ->where('id', '<>' , $id)
+        //                     ->count();
+
+        //if(!$exists){
+            $input = $request->all(); 
+            $customerId = $this->updateCustomer($input, $request, $id);
+        
+            return redirect()->route('customer.index')
+                        ->with('success','Customer updated successfully');   
+        // }else{
+            
+        //     return back()->with('error','Customer already exists');  
+        // }
+
+        
     }
 
 
@@ -249,7 +323,7 @@ class CustomerController extends Controller
             'technical_name' => $input['technical_name'],
             'technical_email' => $input['technical_email'],
             'technical_phone' => $input['technical_phone'],
-            'refferedby' => $input['refferedby']
+            'refferedby' => $input['refferedby']? $input['refferedby'] : auth()->user()->id
         ];
 
         $customer = Customer::find($id);
@@ -275,6 +349,156 @@ class CustomerController extends Controller
         }
 
         return $customer->id;
+    }
+
+    public function importView()
+    {       
+
+        return view('customer.import');
+    }
+
+    public function importExl(Request $request)
+    {
+       
+        $validator = Validator::make(
+          [
+              'file'      => $request->file,
+              'extension' => strtolower($request->file->getClientOriginalExtension()),
+          ],
+          [
+              'file'      => 'required',
+              'extension' => 'required|in:csv,xlsx,xls,ods',
+          ]
+        );
+        $validHeaders = ['company', 'contactname', 'email', 'phone'];        
+        $fileHeaders = current((new HeadingRowImport)->toArray($request->file('file'))[0]);
+        $field = true; 
+        foreach ($validHeaders as $i => $key) {
+            if(!in_array($key, $fileHeaders)){ 
+                $field = false; 
+                break;
+            }            
+        } 
+
+        if(!$field){
+            $validator->after(function($validator) use($field) {            
+                $validator->errors()->add('file', 'Please ensure proper headings to the excel [company, contactname, email, phone]');
+               
+            });
+        }
+
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator);
+        }
+
+        try {
+            Excel::import(new CustomerImport,$request->file('file'));            
+        } catch (\Exception $e) {  
+         
+            $m = $e->getMessage();
+            $dumb = ['Start row (2) is beyond highest row (1)'];
+            if(in_array($m, $dumb)){ $m = 'Empty documents'; }
+            
+            return back()->with('error',$m);
+        }
+          
+        return back()->with('success','Customer imported successfully');
+
+    }
+
+    public function importRetention(Request $request)
+    {
+       
+        $validator = Validator::make(
+          [
+              'file'      => $request->file,
+              'extension' => strtolower($request->file->getClientOriginalExtension()),
+          ],
+          [
+              'file'         => 'required',
+              'extension'    => 'required|in:doc,csv,xlsx,xls,ods',
+          ]
+        );
+        // $fxdcols = ["be", "bc", "landline", "trunk", "isdn"];
+        // $fileHeaders = current((new HeadingRowImport)->toArray($request->file('file'))[0]);       
+     
+        // $date = date('Y-m-d H:i:s');
+        // $status = 0;
+        // Plans and Prices
+        // foreach ($fileHeaders as $key => $head) {
+        //     $price = 0; $plan = ''; $type = '';
+
+        //     $split = explode("_", $head);
+        //     $len = count($split);
+        //     $last = $split[$len-1];
+  
+        //     if($len >1 && preg_match('/^\d+$/', $last) ){
+        //         $price = $split[$len-1];
+        //         array_pop($split);
+        //         $plan = implode(" ", $split);
+        //         //$plan = ($len > 2)? implode(" ", $split): $head;
+
+        //         foreach ($fxdcols as $col) {
+        //             if (stripos(strtolower($plan), $col) !== false) {
+        //                 $type = 'fixed';
+        //             }else{
+        //                 $type = 'mobile';
+        //             }
+        //         }
+
+        //         $plExists = DB::table('plans')->where([
+        //                         ['plan', '=', $plan],
+        //                         ['plan_type', '=', $type]
+        //                     ])->count();
+        //         if(!$plExists){
+        //             // insert plan
+        //             $insertPlan = ["plan" => str_replace('_', ' ', $plan), 
+        //                            "plan_type" => $type,
+        //                            "created_at" => $date,
+        //                            "updated_at" => $date,
+        //                            "status" => $status
+        //                         ];
+        //             $planId = DB::table('plans')->insert($insertPlan);
+        //         }
+
+        //         $ifExists = DB::table('pricings')->where([
+        //                         ['amount', '=', $price],
+        //                         ['plan_type', '=', $type]
+        //                     ])->count();
+
+        //         if(!$ifExists){
+        //         // insert price
+        //             $insertPrice = ["amount" => $price, 
+        //                            "plan_type" => $type,
+        //                            "created_at" => $date,
+        //                            "updated_at" => $date,
+        //                            "status" => $status
+        //                         ];
+        //             $priceId = DB::table('pricings')->insert($insertPrice);
+        //         }
+        //     }else{
+        //         continue;
+        //     }
+
+        // }
+        
+
+        try {
+          Excel::import(new RetentionImport, $request->file('file'));            
+    
+        } catch (\Exception $e) {  
+            $m = $e->getMessage();
+            $dumb = ['Start row (2) is beyond highest row (1)'];
+            if(in_array($m, $dumb)){ $m = 'Empty documents'; }
+            
+            return back()->with('error',$m);
+        }
+          
+       
+
+        return back()->with('success','Customer imported successfully');
+
     }
 
     /**

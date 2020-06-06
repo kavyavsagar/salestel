@@ -58,11 +58,7 @@
               <dt class="col-sm-4">Reported by</dt>
               <dd class="col-sm-8">{{ $complaint->fullname }}</dd> 
               <dt class="col-sm-4">Status</dt>
-              <dd class="col-sm-8">{{ $complaint->status_name }}</dd>
-              @if($complaint->comment)
-                  <dt class="col-sm-4">Comment</dt>
-                  <dd class="col-sm-8">{{ $complaint->comment }}</dd>
-              @endif 
+              <dd class="col-sm-8">{{ ucwords($complaint->status_name) }}</dd>             
               <dt class="col-sm-4">Posted Date</dt>
               <dd class="col-sm-8">{{ date("d-m-Y", strtotime($complaint->created_at)) }}</dd>  
               @if($complaint->filepath)
@@ -71,7 +67,7 @@
                 </dd>  
               @endif 
                  
-            </dl>
+            </dl>            
           </div>
           <!-- /.card-body --> 
           <div class="card-footer">
@@ -98,6 +94,21 @@
           </div>
           <!-- /.card-header -->
           <div class="card-body"> 
+            @if (count($errors) > 0)
+            <div class="alert alert-danger">
+                <strong>Whoops!</strong> There were some problems with your input.<br><br>
+                <ul>
+                   @foreach ($errors->all() as $error)
+                     <li>{{ $error }}</li>
+                   @endforeach
+                </ul>
+            </div>
+            @endif
+            @if ($message = Session::get('error'))
+            <div class="alert alert-danger">
+                <p>{{ $message }}</p>
+            </div>
+            @endif
             <div class="form-group">
                 <select class="form-control" name="status" id="cstatus">                 
                     @foreach ($statuses as $key => $value) 
@@ -108,7 +119,7 @@
                 </select>          
             </div>
             <div class="form-group">
-                {!! Form::textarea('comment', null, ['placeholder' => 'Add comments','class' => 'form-control','id' => 'comments', 'rows' => 4, 'cols' => 50]) !!}         
+                {!! Form::textarea('comment', null, ['placeholder' => 'Add comments','class' => 'form-control','id' => 'comment', 'rows' => 4, 'cols' => 50]) !!}         
             </div>  
           </div>
            <div class="card-footer">
@@ -118,6 +129,46 @@
           </div>
         </div>      
         {!! Form::close() !!}
+      </div>
+    </div>
+    <div class="row">     
+      <div class="col"><br/></div>
+    </div>
+    <div class="row"> 
+      <div class="col">    
+        <div class="card">     
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-comment-dots"></i> Complaint History
+            </h3>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body"> 
+            <p>List all the comments and status based on this complaint</p>        
+            <div class="table-responsive p-0">
+            <table class="table table-striped table-hover text-nowrap">
+                <thead>
+                <tr>
+                  <th scope="col">Status</th>
+                  <th scope="col">Comments</th>
+                  <th scope="col">Added By</th>
+                  <th scope="col">Date Added</th>
+                </tr>
+                </thead>
+                <tbody>  
+                @foreach ($histories as $key => $hist)
+                <tr>
+                  <th scope="row">{{ucwords($hist->status_name)}} </th>
+                  <td>{{$hist->comment}}</td>            
+                  <td>{{$hist->fullname}}</td>
+                  <td>{{date("d/m/Y", strtotime($hist->created_at))}}</td>
+                </tr>
+                @endforeach                            
+                </tbody>
+            </table>
+            </div>
+          </div>
+       </div>
       </div>
     </div>
     </div>

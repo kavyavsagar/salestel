@@ -17,9 +17,9 @@ class CreateCustomersTable extends Migration
             $table->id();
             $table->string('company_name');
             $table->string('location')->nullable();
-            $table->string('account_no');            
+            $table->string('account_no')->nullable();          
             $table->string('authority_name');
-            $table->string('authority_email')->unique();
+            $table->string('authority_email');
             $table->string('password')->nullable();
             $table->string('authority_phone');
             $table->string('technical_name');
@@ -27,7 +27,7 @@ class CreateCustomersTable extends Migration
             $table->string('technical_phone');
             $table->integer('refferedby')->default(0);
             $table->timestamps();
-            $table->tinyInteger('status')->default(1);
+            $table->tinyInteger('status')->default(0);
         });
 
         Schema::create('customer_documents', function (Blueprint $table) {

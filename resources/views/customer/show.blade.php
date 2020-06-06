@@ -116,6 +116,9 @@
           <div class="card-body">          
             <dl class="row">         
               <dd class="col-sm-12">
+                @if(!count($documents))  
+                  <div class="d-inline text-muted">No documents !!</div>
+                @endif
                 @foreach ($documents as $key => $doc)
                     <div id="{{$key}}" class="d-inline">                       
                        <img src="{{asset($doc)}}" class="img-fluid img-thumbnail m-1 mht-100">
@@ -150,7 +153,7 @@
                     <th scope="col">Date</th> 
                     <th scope="col">MRC</th>
                     <th scope="col">PLAN</th>
-                  <!--   <th scope="col">TYPE</th> -->
+                    <th scope="col">TYPE/Nos.</th>
                     <th scope="col">QTY</th>
                     <th scope="col">TOTAL (AED)</th>
                   </tr>
@@ -168,7 +171,7 @@
                       <td>{{ date("d/m/Y", strtotime($plan->created_at)) }}</td>
                       <th scope="row">{{$plan->price}}</th>
                       <td>{{$plan->plan}}</td>
-                   <!--    <td>{{$plan->ptype}}</td> -->
+                      <td>{{$plan->ptype}}<p>{{$plan->phoneno}}</p></td>
                       <td>{{$plan->quantity}}</td>
                       <td>{{$plan->total}}</td>
                   </tr>                

@@ -25,9 +25,9 @@ self.addEventListener('fetch', function(event) {
   );
 });
 
-self.addEventListener('beforeinstallprompt', saveBeforeInstallPromptEvent);
+//self.addEventListener('beforeinstallprompt', saveBeforeInstallPromptEvent);
 
-function saveBeforeInstallPromptEvent(evt) {
-    deferredInstallPrompt = evt;
-    deferredInstallPrompt.prompt();
-}
+// function saveBeforeInstallPromptEvent(evt) {
+//     deferredInstallPrompt = evt;
+//     deferredInstallPrompt.prompt();
+// }

@@ -1,98 +1,75 @@
-@extends('layouts.app')
+@extends('layouts.meeting')
 
 
 @section('content')
+<section class="content">
+  <div class="container">
+    <div class="row">
+      <!-- left column -->   
+    <div class="col">
 
-<!-- Content Header (Page header) -->
-<section class="content-header d-none">
-  <div class="container-fluid">
-    <div class="row mb-2">
-      <div class="col-sm-6">
-        <h1>Start Meeting</h1>
+      <!-- Automatic element centering -->
+      <div class="lockscreen-wrapper">
+        <div class="lockscreen-logo">
+          <div class="login-logo">
+             <a href="{{ url('/') }}"><b>JOIN</b> Meeting</a>
+          </div>
+        </div>
+        <!-- User name -->
+        <div class="lockscreen-name">Welcomes You</div>
+
+        <!-- START LOCK SCREEN ITEM -->
+        <div class="lockscreen-item">
+          <!-- lockscreen image -->
+          <div class="lockscreen-image">
+            <img src="{{ asset('dist/img/user1-128x128.jpg') }}" alt="User Image">
+          </div>
+          <!-- /.lockscreen-image -->
+
+          <!-- lockscreen credentials (contains the form) -->
+          {!! Form::open(array('route' => 'meeting.joined','method'=>'POST', 'class' => 'lockscreen-credentials')) !!}
+           
+            <div class="input-group">
+              <input type="text" class="form-control" placeholder="Meeting ID" name="meetid">
+              <div class="input-group-append">
+                <button type="submit" class="btn"><i class="fas fa-arrow-right text-muted"></i></button>
+              </div>
+            </div>
+            @if (count($errors) > 0)
+            <div class="alert text-danger">      
+                @foreach ($errors->all() as $error)
+                <span class="small">{{ $error }}</span>
+                @endforeach         
+            </div>
+            @endif
+            @if ($message = Session::get('error'))
+              <div class="alert text-danger">
+                <span class="small">{{ $message }}</span>
+              </div>
+            @endif
+          {!! Form::close() !!}
+          <!-- /.lockscreen credentials -->
+
+        </div>
+        <!-- /.lockscreen-item -->
+        <div class="help-block text-center">
+          Enter your meeting Id to join the session
+        </div>
+        @guest
+        <div class="text-center">
+          <a href="{{ route('login') }}">Or sign in as employee user</a>
+        </div>
+        <div id="installContainer" class="text-center">
+          <p class="text-muted">Get our free app. It won't take up space on your phone.</p>
+          <button class="btn btn-secondary" id="btnInstall" type="button"><i class="fas fa-download"></i>&nbsp;Install</button>
+        </div> 
+        @endauth      
       </div>
-      <div class="col-sm-6">
-        <ol class="breadcrumb float-sm-right">
-          <li class="breadcrumb-item"><a href="{{ url('/') }}">Home</a></li>
-          <li class="breadcrumb-item active">Meeting Room</li>
-        </ol>
-      </div>
+      <!-- /.center -->
+
+
+    </div>
     </div>
   </div>
-</section>
-<!-- /.container-fluid -->
-<!-- Main content -->
-<section class="content">
-    <div class="container-fluid">
-      <div class="row">
-        <!-- left column -->
-     
-      <div class="col">
-        <!-- general form elements -->
-        <div class="card card-primary">
-         <!--  <div class="card-header">
-            <h3 class="card-title">Start Meeting</h3>            
-          </div> -->
-          <!-- /.card-header -->
-          <!-- form start -->         
-            <div class="card-body">
-
-              <div id="meet">Connecting...</div>
-
-              <input type="hidden" value="{{$data['meetingid']}}" id="mid">
-              <input type="hidden" value="{{$data['fullname']}}" id="fname">
-              <input type="hidden" value="{{$data['email']}}" id="uemail"> 
-            </div>
-            <!-- /.card-body -->
-            <div class="card-footer d-none">              
-               <a href="{{ route('meeting.index') }}" class="btn btn-primary">Back</a>
-            </div>
-    
-        </div>
-        <!-- /.card -->
-    </div>
-    
-    </div>
-    </div>
-</section>
-
-
-<script src="https://meet.jit.si/external_api.js"></script>
-<script type="text/javascript">  
-   
-    var meet =  document.querySelector('#meet'),
-        roomid = document.getElementById('mid').value,
-        fname = document.getElementById('fname').value,
-        uemail = document.getElementById('uemail').value;
-
-    meet.innerHTML = '';
-    
-    var domain = "meet.jit.si";
-    var options = {
-        roomName: 'Babu-1587383231018',            
-        parentNode: meet,
-        width: '100%',
-        height: '30em',
-        configOverwrite: {
-            disableDeepLinking: true,            
-        },
-        interfaceConfigOverwrite: {
-          //filmStripOnly: true,
-          DEFAULT_REMOTE_DISPLAY_NAME: 'You',
-          SHOW_JITSI_WATERMARK: false,
-          JITSI_WATERMARK_LINK: '',
-          // if watermark is disabled by default, it can be shown only for guests
-          SHOW_WATERMARK_FOR_GUESTS: false,
-          SHOW_BRAND_WATERMARK: false,
-          BRAND_WATERMARK_LINK: '',
-          APP_NAME: 'TSM Meet',
-          NATIVE_APP_NAME: 'TSM Meet',
-          PROVIDER_NAME: 'TSM',
-        },
-        userInfo: {
-          email: uemail,
-          displayName: fname
-      }
-    }
-    var api = new JitsiMeetExternalAPI(domain, options);  
-</script>
+</section>   
 @endsection

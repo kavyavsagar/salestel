@@ -7,6 +7,7 @@ use App\Complaint;
 use App\User;
 use Redirect;
 use DB;
+use Carbon\Carbon;
 use Validator,Response,File;
 
 class ComplaintController extends Controller
@@ -48,12 +49,12 @@ class ComplaintController extends Controller
         $query = DB::table('complaints')
             ->join('users AS u1', 'u1.id', '=', 'complaints.reported_by')
             ->join('complaint_statuses AS cs', 'cs.id', '=', 'complaints.status')
-            ->select('u1.fullname', 'cs.name AS status_name', 'complaints.*');
+            ->select('u1.fullname', 'cs.name as status_name', 'complaints.*');
        
         if(auth()->user()->hasAnyRole('Agent', 'Team Lead')){           
             $query->whereIn('complaints.reported_by', $Team);
         }
-        $data = $query->paginate(10);            
+        $data = $query->paginate(25)->appends(request()->query());            
 
         return view('complaint.index',compact('data'))
             ->with('i', ($request->input('page', 1) - 1) * 5);
@@ -83,10 +84,10 @@ class ComplaintController extends Controller
 
         $this->validate($request, [
             'customer_acc_no' => 'required',
-            'description' => 'required',
+            'description'   => 'required',
             'priority' => 'required',
             'reported_by' => 'required', 
-            'filepath.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'             
+            'filepath' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048'    
         ]); 
         
         $input = $request->all();
@@ -103,9 +104,18 @@ class ComplaintController extends Controller
 
             $input['filepath'] = $saveTo.'/'.$image;
             
-        }
+        }      
+        $complaint = Complaint::create($input);
 
-        $complaintId = Complaint::create($input);
+        $history = [
+            'complaint_id' => $complaint->id,
+            'status_id' => 1,
+            'comment'   => 'Reported new complaint of customer '.$input['customer_acc_no'],
+            'added_by' => auth()->user()->id,
+            'created_at'  => \Carbon\Carbon::now(), # new \Datetime()
+            'updated_at'  => \Carbon\Carbon::now()  # new \Datetime()
+        ];
+        DB::table('complaint_histories')->insert($history);
                
         return redirect()->route('complaint.index')
                         ->with('success','Complaint created successfully');
@@ -130,8 +140,17 @@ class ComplaintController extends Controller
             ->first();
  
         $statuses = DB::table('complaint_statuses')->get();
+  
+        $histories = DB::table('complaint_histories As ch')
+                    ->join('users AS u1', 'u1.id', '=', 'ch.added_by')
+                    ->join('complaint_statuses AS cs', 'cs.id', '=', 'ch.status_id')
+                    ->select('u1.fullname', 'cs.name AS status_name', 'ch.*')
+                    ->where('complaint_id', $id)
+                    ->orderBy('created_at', 'DESC')
+                    ->get();
+
     
-        return view('complaint.show',compact('complaint', 'statuses'));
+        return view('complaint.show',compact('complaint', 'statuses', 'histories'));
     }
 
     // Change the order status
@@ -139,20 +158,35 @@ class ComplaintController extends Controller
         
         $this->validate($request, [      
             'complaintid'   => 'required',
-            'status' => 'required'     
+            'status' => 'required',
+            'comment' => 'required'     
         ]); 
 
         $input = $request->all();       
         $complaint = Complaint::find($input['complaintid']);
+        $old_status = $complaint->status;
 
-        $update = [            
-            'attended_by' => auth()->user()->id,
-            'comment'     => $input['comment']?$input['comment']: '',
-            'status'      => $input['status']
-         ];
+        if($old_status != $input['status']){
 
-        ## Update Order
-        $complaint->update($update);
+            $update = [                       
+                'status' => $input['status']
+            ];
+            ## Update complaint
+            $complaint->update($update);
+
+            // add history
+            $history = [
+                'complaint_id' => $input['complaintid'],
+                'status_id' =>  $input['status'],
+                'comment'   => $input['comment']?$input['comment']: '',
+                'added_by'  => auth()->user()->id,
+                'created_at'  => \Carbon\Carbon::now(), # new \Datetime()
+                'updated_at'  => \Carbon\Carbon::now()  # new \Datetime()
+            ];
+            DB::table('complaint_histories')->insert($history);
+        }else{
+            return back()->with('error','You should select right status');
+        }
 
         return redirect()->route('complaint.show', $complaint->id)
                         ->with('success','Complaint status updated successfully');
@@ -188,7 +222,7 @@ class ComplaintController extends Controller
             'description' => 'required',
             'priority' => 'required',
             'reported_by' => 'required', 
-            'filepath.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'             
+            'filepath' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048'               
         ]); 
         
         $input = $request->all();
@@ -234,6 +268,10 @@ class ComplaintController extends Controller
     public function destroy($id)
     {
         //
+        // Complaint Status history
+        DB::table('complaint_histories')->where('complaint_id',$id)->delete();
+
+        // Complaint
         $complaint = Complaint::find($id);        
         
         if($complaint->filepath != ''){   
@@ -243,7 +281,7 @@ class ComplaintController extends Controller
             if(File::exists($image_path)) {
                 File::delete($image_path);
             }
-        }
+        }        
 
         $complaint->delete(); 
 

@@ -230,6 +230,9 @@
                       <th scope="col">MRC</th>
                       <th scope="col">PLAN</th>
                       <th scope="col">TYPE</th>
+                      @if($order->plan_type == 'mobile')
+                      <th scope="col">PHONENO.</th>
+                      @endif
                       <th scope="col">QTY</th>
                       <th scope="col">TOTAL (AED)</th>
                     </tr>
@@ -240,13 +243,16 @@
                         <th scope="row">{{$plan->price}}</th>
                         <td>{{$plan->plan}}</td>
                         <td>{{$plan->plan_type}}</td>
+                        @if($order->plan_type == 'mobile')
+                        <td>{{$plan->phoneno}}</td> 
+                        @endif                       
                         <td>{{$plan->quantity}}</td>
                         <td>{{$plan->total}}</td>
                     </tr>
                     @endforeach    
                     <tr>
                         <th scope="row"></th>
-                        <td colspan="3" align="right"><b>SubTotal :</b></td>
+                        <td colspan="4" align="right"><b>SubTotal :</b></td>
                         <td align="left">{{$order->total_amount}}</td>
                     </tr>                   
                     </tbody>

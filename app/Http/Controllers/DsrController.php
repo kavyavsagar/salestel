@@ -98,6 +98,11 @@ class DsrController extends Controller
         if(!empty($custIds)){ 
             // condition applied for search by parent or team lead/agent login or search by user
             $query->whereIn('orders.customer_id', $custIds);    
+        }else{
+            if( (isset($input['parentid']) && $input['parentid'] >0) || 
+                (isset($input['userid']) && $input['userid'] >0) ) { 
+                $query->where('orders.customer_id', 0); 
+            }
         }
         
         if(isset($input['start_date']) && $input['start_date'] != ""
@@ -110,7 +115,7 @@ class DsrController extends Controller
         }
 
         $query->orderBy('orders.id', 'DESC');
-        $data = $query->paginate(10);
+        $data = $query->paginate(25)->appends(request()->query());
 
         $fields = $input;
         
@@ -168,7 +173,8 @@ class DsrController extends Controller
 
         $this->validate($request, [
             'company_name' => 'required',
-            'account_no' => 'required',
+            //'account_no' => 'required',
+            'location'  => 'required',
             'authority_name' => 'required',          
             'authority_phone' => 'required',
             'technical_name' => 'required',
@@ -176,7 +182,7 @@ class DsrController extends Controller
             'technical_phone' => 'required',                
             'refferedby' => 'required',
             //'image' => 'required',
-            'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image.*' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048',
             'order_status' => 'required',
             'sales_priority' => 'required'
         ]); 
@@ -189,6 +195,10 @@ class DsrController extends Controller
             $this->validate($request, [
                 'authority_email' => 'required|email|unique:customers,authority_email,'.$cid, 
                 ]);
+            // $exists = Customer::where('authority_email',$input['authority_email'])
+            //                 ->where('id', '<>' , $cid)
+            //                 ->count();
+            // if(!$exists)
             $input['customer_id'] = app(CustomerController::class)->updateCustomer($input, $request, $cid);
              
         }else{
@@ -199,24 +209,25 @@ class DsrController extends Controller
             $input['customer_id'] = app(CustomerController::class)->createCustomer($input, $request); 
         }     
 
+        $res_m = $res_f = '';
         // For MOBILE
-        if(isset($input['mobile']) && $input['mobile']){  
-            $input['mobile'] = json_decode($input['mobile']);  
+        $input['mobile'] = json_decode($input['mobile']); 
+        if(isset($input['mobile']) && !empty($input['mobile']) ){               
 
             $res_m = $this->insertOrderPlan($input, 'mobile');
         }
 
         // For FIXED
-        if(isset($input['fixed']) && $input['fixed']){
-            $input['fixed'] = json_decode($input['fixed']);    
-
+        $input['fixed'] = json_decode($input['fixed']);
+        if(isset($input['fixed']) && !empty($input['fixed'])){              
+            
             $res_f = $this->insertOrderPlan($input, 'fixed');
         }
         
         if($res_m || $res_f){
-            return response()->json(['success'=>'You have successfully placed an order.']);
+            return response()->json(['success'=>'You have successfully placed a DSR.']);
         }
-        return response()->json(['error'=>'There is an error occured while placing an order.']);
+        return response()->json(['error'=>'There is an error occured while placing a DSR.']);
         
     }
 
@@ -242,6 +253,7 @@ class DsrController extends Controller
                             "plan_type"  => $arplan->plan_type,    
                             "quantity"   => $arplan->qty,
                             "total"      => $arplan->total,
+                            "phoneno"    => (isset($arplan->phoneno) && $arplan->phoneno)? $arplan->phoneno: '',
                             "created_at" => \Carbon\Carbon::now(), # new \Datetime()
                             "updated_at" => \Carbon\Carbon::now()  # new \Datetime()
                         ];   
@@ -272,7 +284,7 @@ class DsrController extends Controller
                     "updated_at"      => \Carbon\Carbon::now()  # new \Datetime()
                     ];
 
-        DB::table('order_historys')->insert($status_insert);
+        DB::table('order_histories')->insert($status_insert);
 
 
         #### Order Plans
@@ -310,6 +322,7 @@ class DsrController extends Controller
                     "plan_type"  => $arplan->plan_type,    
                     "quantity"   => $arplan->qty,
                     "total"      => $arplan->total,
+                    "phoneno"    => (isset($arplan->phoneno) && $arplan->phoneno)? $arplan->phoneno: '',
                     "created_at" => \Carbon\Carbon::now(), # new \Datetime()
                     "updated_at" => \Carbon\Carbon::now()  # new \Datetime()
                 ];
@@ -344,7 +357,7 @@ class DsrController extends Controller
                         "updated_at"      => \Carbon\Carbon::now()  # new \Datetime()
                         ];
 
-            DB::table('order_historys')->insert($status_insert);
+            DB::table('order_histories')->insert($status_insert);
 
         }
         $ikey = $order->plan_type;
@@ -383,11 +396,11 @@ class DsrController extends Controller
         $documents = DB::table('customer_documents')->where('customer_id',$order->customer_id)->get()->pluck('document_path')->toArray();
 
         $ord_plans = DB::table('order_plans AS op')
-                    ->select('op.price', 'op.plan', 'op.quantity', 'op.plan_type', 'op.total')   
+                    ->select('op.price', 'op.plan', 'op.quantity', 'op.plan_type', 'op.total', 'op.phoneno')   
                     ->where('op.order_id',$id)
                     ->get();
 
-        $ord_history = DB::table('order_historys AS oh')
+        $ord_history = DB::table('order_histories AS oh')
                     ->orderBy('oh.id','DESC')
                     ->join('order_statuses AS os', 'os.id', '=', 'oh.order_status_id')
                     ->join('users AS us', 'us.id', '=', 'oh.added_by')
@@ -431,7 +444,7 @@ class DsrController extends Controller
                         "updated_at"      => \Carbon\Carbon::now()  # new \Datetime()
                         ];
 
-            DB::table('order_historys')->insert($status_insert);
+            DB::table('order_histories')->insert($status_insert);
         }
 
         ## Update Order
@@ -473,10 +486,10 @@ class DsrController extends Controller
         $documents = DB::table('customer_documents')->where('customer_id',$order->customer_id)->get()->pluck('document_path')->toArray();
 
         $arplans = DB::table('order_plans')
-                    ->select('price', 'plan', 'plan_id','plan_type', 'quantity', 'total', 'id AS order_planid')
+                    ->select('price', 'plan', 'plan_id','plan_type', 'quantity', 'total', 'id AS order_planid', 'phoneno')
                     ->where('order_id',$id)->get();
         
-        $history = DB::table('order_historys AS oh')
+        $history = DB::table('order_histories AS oh')
                     ->orderBy('oh.id','DESC')
                     ->join('order_statuses AS os', 'os.id', '=', 'oh.order_status_id')
                     ->join('users AS us', 'us.id', '=', 'oh.added_by')
@@ -501,7 +514,8 @@ class DsrController extends Controller
         $this->validate($request, [
             'orderid'   => 'required',
             'company_name' => 'required',
-            'account_no' => 'required',
+           // 'account_no' => 'required',
+            'location' => 'required',
             'authority_name' => 'required',          
             'authority_phone' => 'required',
             'technical_name' => 'required',
@@ -509,7 +523,7 @@ class DsrController extends Controller
             'technical_phone' => 'required',                
             'refferedby' => 'required',
             //'image' => 'required',
-            'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image.*' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048',
             'order_status' => 'required',
             'sales_priority' => 'required'
         ]); 
@@ -523,11 +537,17 @@ class DsrController extends Controller
             //update customer
             $cid = $input['customerid'];
             $this->validate($request, [
-                'authority_email' => 'required|email|unique:customers,authority_email,'.$cid, 
+               'authority_email' => 'required|email|unique:customers,authority_email,'.$cid,  
                 ]);
+            
+            // $exists = Customer::where('authority_email',$input['authority_email'])
+            //                 ->where('id', '<>' , $cid)
+            //                 ->count();
+            // if(!$exists)
             $input['customer_id'] = app(CustomerController::class)->updateCustomer($input, $request, $cid);
              
         }else{
+           
             // Create Customer
             $this->validate($request, [
                 'authority_email' => 'required|email|unique:customers,authority_email'
@@ -569,7 +589,7 @@ class DsrController extends Controller
         DB::table('order_plans')->where('order_id',$id)->delete();
 
         // Order Status history
-        DB::table('order_historys')->where('order_id',$id)->delete();
+        DB::table('order_histories')->where('order_id',$id)->delete();
 
         // Order
         Order::find($id)->delete(); 

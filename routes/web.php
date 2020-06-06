@@ -38,24 +38,35 @@ Route::group(['middleware' => ['auth']], function() {
     Route::get('/ordercomplete', 'OrderController@completed')->name('order.complete');
     Route::post('complaint/changestatus', 'ComplaintController@changeStatus')->name('complaint.changestatus');    
     Route::get('/orderexport', 'OrderController@exportCSV')->name('order.exportcsv');
+    Route::get('/updateplan', 'OrderController@updatePlan')->name('order.updateplan');
+    Route::post('/saveplan', 'OrderController@savePlan')->name('order.saveplan');
+    
 
     Route::resource('dsr','DsrController');
     Route::get('/dsrexport', 'DsrController@exportCSV')->name('dsr.exportcsv');
     Route::post('/updateDsr', 'DsrController@update')->name('dsr.updateOrder');
     Route::post('/activateDsr', 'DsrController@changeStatus')->name('dsr.changestatus');
 
-    Route::get('/chatapp/{id}', function () {
-        return view('videochat');
-    })->name('chatapp');
+    Route::get('/customerimport', 'CustomerController@importView')->name('customer.importview');
+    Route::get('/customerpending', 'CustomerController@pending')->name('customer.pending');
+    Route::post('/importExl', 'CustomerController@importExl')->name('customer.importExl');
+    Route::post('/importRetention', 'CustomerController@importRetention')->name('customer.importRetention');
 
-    Route::get('/meeting/index', 'MeetingController@index')->name('meeting.index');
-    Route::post('/meeting/join', 'MeetingController@join')->name('meeting.join');
-    Route::get('/meeting/start', 'MeetingController@start')->name('meeting.start');
-    
+    Route::post('/fetchcustomer', 'CustomerController@fetchCustomer')->name('customer.fetch');
+
+    Route::get('/createmeeting', 'MeetingController@index')->name('meeting.index');
+    Route::post('/meeting/host', 'MeetingController@host')->name('meeting.host');    
 });
+
+Route::get('/meeting/{id}', 'MeetingController@start')->name('meeting.start');
+Route::get('/joinmeeting', 'MeetingController@join')->name('meeting.join');
+Route::post('/meeting/join', 'MeetingController@joined')->name('meeting.joined');
 
 Route::get('/clear-cache', function() {
     Artisan::call('cache:clear');
+    Artisan::call('route:clear');
+    Artisan::call('config:clear');
+    Artisan::call('view:clear');
     // return "Cache is cleared";
     return view('cache');
 })->name('cache.clear');
