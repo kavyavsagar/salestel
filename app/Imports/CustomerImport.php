@@ -2,8 +2,7 @@
    
 namespace App\Imports;
    
-use App\Customer;
-use App\User;
+use App\Dsr;
 use Carbon\Carbon;
 use DB;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -35,23 +34,24 @@ class CustomerImport implements ToModel, WithHeadingRow
 
         if(!array_filter($row)) { return null;}
 
-        //check for customer already exists
-        //$ifExists = Customer::where('authority_email', $row['email'])->count();
-        
-        //if(!$ifExists){
-            
-            return new Customer([
-                'company_name'     => isset($row['company'])?$row['company']: '',
-                'account_no'       => '',
-                'authority_name'   => isset($row['contactname'])?$row['contactname']:'',
-                'authority_email'  => isset($row['email'])?$row['email']: '', 
-                'authority_phone'  => isset($row['phone'])?$row['phone']: '',
-                'technical_name'   => '',
-                'technical_email'  => '', 
-                'technical_phone'  => '',
-                'refferedby'       => auth()->user()->id
+        if(isset($row['company'])){
+
+            //check for customer already exists
+            $ifExists = Dsr::where('company', trim($row['company']))->count();
+            if($ifExists >0) {
+                return null;
+            }
+      
+            return new Dsr([
+                'company'        => isset($row['company'])?$row['company']: '',               
+                'contact_name'   => isset($row['contactname'])?$row['contactname']:'',
+                'email'          => isset($row['email'])?$row['email']: '', 
+                'phone'          => isset($row['phone'])?$row['phone']: '',
+                'refferedby'     => auth()->user()->id,
+                'dsr_status'     => 1
             ]);
-        //}
+            
+        }
     }
 
     // public function sheets(): array

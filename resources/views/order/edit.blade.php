@@ -162,7 +162,7 @@
                                 <label>Upload all documents:</label>
                                 <div class="input-group">
                                     <div class="custom-file">
-                                        <input type="file" class="custom-file-input" id="file-input" name="image[]" multiple="" 
+                                        <input type="file" class="custom-file-input" id="file-input" name="image[]" multiple
                                         accept="image/jpeg,image/jpg,image/png,image/bmp,application/pdf" />
                                         <label class="custom-file-label" for="file-input">Choose file</label>
                                     </div>
@@ -197,7 +197,16 @@
                         <div class="col-xs-12 col-sm-12 col-md-12">
                             @foreach ($documents as $key => $doc)
                             <div id="{{$key}}" class="d-inline">    
-                               <img src="{{asset($doc)}}" class="img-fluid img-thumbnail m-1 mht-100">
+                            @php
+                              $file_parts = pathinfo($doc);
+                            @endphp
+
+                            @if($file_parts['extension'] == 'pdf')
+                              <span><a href="{{asset($doc)}}" download>{{ explode("/",$doc)[1] }}</a>
+                              <a href="javascript:void(0);"> <i> </i></a></span><br/>
+                            @else
+                              <a href="{{asset($doc)}}" download><img src="{{asset($doc)}}" class="img-fluid img-thumbnail m-1 mht-100"></a><br/>
+                            @endif
                             </div>
                             @endforeach 
                         </div>
@@ -251,14 +260,20 @@
                             <div class="form-group">
                                 <select class="form-control" name="plan_type" id="mptype"> 
                                     <option value="">--PLAN TYPE--</option>
-                                    <option value="New">New</option>
+                                    @foreach ($planStatus as $key => $value) 
+                                    <option value="{{ $key }}"> 
+                                        {{ $value }} 
+                                    </option>
+                                    @endforeach  
+                                    <!-- <option value="New">New</option>
                                     <option value="MNP">MNP</option>
                                     <option value="Migrated">Migrated</option>
                                     <option value="Renewal">Renewal</option>
                                     <option value="Upgrade">Upgrade</option>
                                     <option value="Downgrade">Downgrade</option>
+                                    <option value="Cancel">Cancel</option>
                                     <option value="Vas">Vas</option>
-                                    <option value="RPC">RPC - Rate Plan Change</option>
+                                    <option value="RPC">RPC - Rate Plan Change</option> -->
                                 </select>          
                             </div>
                         </div>
@@ -274,7 +289,7 @@
                         </div>
                         <div class="col-xs-12 col-sm-2 col-md-2">
                             <div class="form-group">
-                                <button type="button" class="btn btn-primary" id="mobile-add">Add New</button>
+                                <button type="button" class="btn btn-primary" id="mobile-add">Add</button>
                             </div>
                         </div>
                     </div>   
@@ -357,14 +372,20 @@
                             <div class="form-group">
                                 <select class="form-control" name="fixed_type" id="fptype"> 
                                     <option value="">--PLAN TYPE--</option>
-                                    <option value="New">New</option>
+                                    @foreach ($planStatus as $key => $value) 
+                                    <option value="{{ $key }}"> 
+                                        {{ $value }} 
+                                    </option>
+                                    @endforeach  
+                                   <!--<option value="New">New</option>
                                     <option value="MNP">MNP</option>
                                     <option value="Migrated">Migrated</option>
                                     <option value="Renewal">Renewal</option>
                                     <option value="Upgrade">Upgrade</option>
                                     <option value="Downgrade">Downgrade</option>
+                                    <option value="Cancel">Cancel</option>
                                     <option value="Vas">Vas</option>
-                                    <option value="RPC">RPC - Rate Plan Change</option>
+                                    <option value="RPC">RPC - Rate Plan Change</option> -->
                                 </select>          
                             </div>
                         </div>
@@ -375,7 +396,7 @@
                         </div>
                         <div class="col-xs-12 col-sm-3 col-md-3">
                             <div class="form-group">
-                                <button type="button" class="btn btn-primary" id="fixed-add">Add New</button>
+                                <button type="button" class="btn btn-primary" id="fixed-add">Add</button>
                             </div>
                         </div>
                     </div> 
@@ -429,7 +450,8 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-4 col-md-4">
                         <div class="form-group">
-                            <select class="form-control" name="order_status" id="ostatus">                 
+                            <input type="hidden" name="order_status" value="{{$order->order_status_id}}">
+                            <select class="form-control" id="ostatus" disabled="true">                 
                                 @foreach ($ordstatus as $key => $value) 
                                 <option value="{{ $key }}" {{ ($key == $order->order_status_id)? 'selected' : ''}}> 
                                     {{ ucwords(str_replace("_"," ",$value)) }} 
@@ -482,7 +504,7 @@
                             <div class="form-group float-right">
                                 <button type="button" class="btn btn-outline-secondary btnPrevious mr-1" data-id="{{$order->plan_type}}">Previous</button>
                                 <button type="submit" class="btn btn-outline-success btn-submit">Confirm & Save</button>
-                                <span id="loader"></span>
+                                <div id="loader"></div>
                             </div>
                         </div>
                     </div>
@@ -492,7 +514,7 @@
           </div>
             <!-- /.card-body -->
           <div class="card-footer">
-              <a class="btn btn-default float-right" href="{{ route('order.index') }}"> Cancel</a>
+              <a class="btn btn-secondary float-right" href="{{ route('order.index') }}"> Back</a>
           </div>          
         </div>
         <!-- /.card -->
@@ -535,11 +557,14 @@ $(document).ready(function(){
             ptype = $('#mptype').val(),
             phoneno = $('#phoneno').val(),
             qty = parseInt($('#mqty').val()),
-            total = (qty >0)? parseInt(price * qty): 0,
+            total =  parseInt(price * qty),
             plan = splan.split("-"); 
-
-        if(ptype == 'Upgrade' || ptype == 'Downgrade'){
+        
+        if(ptype == 'Upgrade' || ptype == 'Downgrade' || ptype == 'Vas' || ptype == 'RPC'){
             qty = total = 0;
+        }else if(ptype == 'Cancel'){
+            qty =  qty < 0 ? qty : (qty > 0 ? (qty * -1) : -1);
+            total = parseInt(price * qty);
         }   
 
         let mobd = JSON.stringify({"price": price, "planid": parseInt(plan[0]), "plan": plan[1],"plan_type": ptype,"phoneno": phoneno, "qty": qty, "total": total});        
@@ -605,7 +630,14 @@ $(document).ready(function(){
             fptype = $('#fptype').val(),
             qty = parseInt($('#fqty').val()),
             total = parseInt(price * qty),
-            plan = splan.split("-");    
+            plan = splan.split("-");  
+
+        if(fptype == 'Upgrade' || fptype == 'Downgrade' || fptype == 'Vas' ||  fptype == 'RPC'){
+            qty = total = 0;        
+        }else if(fptype == 'Cancel'){
+            qty =  qty < 0 ? qty : (qty > 0 ? (qty * -1) : -1);
+            total = parseInt(price * qty);
+        }   
 
         let fixd = JSON.stringify({"price": price, "planid": parseInt(plan[0]), "plan": plan[1], "plan_type": fptype, "qty": qty, "total": total});        
 
@@ -716,7 +748,7 @@ $(document).ready(function(){
             formData.append('fixed', JSON.stringify(fxdData));
 
         if(loading){
-            $('#loader').html('Loading...');
+            $('#loader').html('Please wait it will take few seconds to complete...');
         }
         $.ajax({
             type:'POST',
@@ -771,7 +803,7 @@ $(document).ready(function(){
                         return function(e) {                           
                             let preview = '';
                             if(file.type.match('application/pdf')){
-                                preview = $('<span/>').addClass('text-danger m-1').html(file.name);
+                                preview = $('<p/>').addClass('text-danger m-1').html(file.name);
                             }else{
                                 preview = $('<img/>').addClass('img-fluid img-thumbnail m-1 mht-100').attr('src', e.target.result); //create image element 
                             }

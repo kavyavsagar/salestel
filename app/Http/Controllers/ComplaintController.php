@@ -10,6 +10,9 @@ use DB;
 use Carbon\Carbon;
 use Validator,Response,File;
 
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ComplaintExport;
+
 class ComplaintController extends Controller
 {
     
@@ -26,6 +29,16 @@ class ComplaintController extends Controller
          $this->middleware('permission:complaint-edit', ['only' => ['edit','update']]);
          $this->middleware('permission:complaint-delete', ['only' => ['destroy']]);
     }
+    /********** Export **************
+    */
+    public function exportCSV(Request $request)
+    {   
+
+        $input = $request->all();
+
+        $date = now();
+        return Excel::download(new ComplaintExport($input), 'complaints'.$date.'.xlsx');
+    }
     /**
      * Display a listing of the resource.
      *
@@ -40,24 +53,63 @@ class ComplaintController extends Controller
 
         if(auth()->user()->hasRole('Team Lead')){
             $tusers =  User::where('parentid', '=', auth()->user()->id)
-                    ->get()
-                    ->pluck('id')->toArray();
+                        ->get()
+                        ->pluck('id')->toArray();
 
-            array_push($Team, $tusers);
+            $Team = array_merge($Team, $tusers);
         }
 
         $query = DB::table('complaints')
             ->join('users AS u1', 'u1.id', '=', 'complaints.reported_by')
             ->join('complaint_statuses AS cs', 'cs.id', '=', 'complaints.status')
-            ->select('u1.fullname', 'cs.name as status_name', 'complaints.*');
+            ->select('u1.fullname', 'cs.name as status_name', 'complaints.*')
+            ->where('complaints.status','<>', 3);
        
         if(auth()->user()->hasAnyRole('Agent', 'Team Lead')){           
             $query->whereIn('complaints.reported_by', $Team);
         }
-        $data = $query->paginate(25)->appends(request()->query());            
+         $data = $query->get();
 
-        return view('complaint.index',compact('data'))
-            ->with('i', ($request->input('page', 1) - 1) * 5);
+        return view('complaint.index',compact('data'));
+
+        //$data = $query->paginate(25)->appends(request()->query());            
+
+        // return view('complaint.index',compact('data'))
+        //     ->with('i', ($request->input('page', 1) - 1) * 5);
+    }
+
+    public function solved(Request $request)
+    {
+        //  
+        $Team = [];
+        
+        array_push($Team, auth()->user()->id);
+
+        if(auth()->user()->hasRole('Team Lead')){
+            $tusers =  User::where('parentid', '=', auth()->user()->id)
+                        ->get()
+                        ->pluck('id')->toArray();
+
+            $Team = array_merge($Team, $tusers);
+        }
+
+        $query = DB::table('complaints')
+            ->join('users AS u1', 'u1.id', '=', 'complaints.reported_by')
+            ->join('complaint_statuses AS cs', 'cs.id', '=', 'complaints.status')
+            ->select('u1.fullname', 'cs.name as status_name', 'complaints.*')
+            ->where('complaints.status','=', 3);
+       
+        if(auth()->user()->hasAnyRole('Agent', 'Team Lead')){           
+            $query->whereIn('complaints.reported_by', $Team);
+        }
+         $data = $query->get();
+
+        return view('complaint.solved',compact('data'));
+
+        //$data = $query->paginate(25)->appends(request()->query());            
+
+        // return view('complaint.index',compact('data'))
+        //     ->with('i', ($request->input('page', 1) - 1) * 5);
     }
 
     /**
@@ -68,7 +120,26 @@ class ComplaintController extends Controller
     public function create()
     {
         //
-        $users = User::all()->pluck('fullname', 'id')->toArray();        
+        $users = [];
+        if(auth()->user()->hasAnyRole(['Coordinator', 'Admin'])) { 
+            // admin, coordinator
+            $users = User::where('status', '=', 1)
+                        ->orderBy('fullname', 'ASC')
+                        ->get()->pluck('fullname', 'id')->toArray(); 
+
+        }else if(auth()->user()->hasRole('Team Lead')){
+            $users = [auth()->user()->id => auth()->user()->fullname];
+
+            $tusers =  User::where('status', '=', 1)
+                    ->where('parentid', '=', auth()->user()->id)
+                    ->orderBy('fullname', 'ASC')->get()
+                    ->pluck('fullname', 'id')->toArray();
+
+            $users = $users + $tusers; 
+        }
+
+
+     
         return view('complaint.create',compact( 'users'));
     }
 
@@ -87,25 +158,37 @@ class ComplaintController extends Controller
             'description'   => 'required',
             'priority' => 'required',
             'reported_by' => 'required', 
-            'filepath' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048'    
+            'filedoc.*' => 'mimes:jpeg,png,jpg,bmp,pdf'  
         ]); 
         
         $input = $request->all();
 
-        if ($request->hasfile('filepath')) {
+   //     if(auth()->user()->hasAnyRole(['Coordinator', 'Admin'])) { 
+        $lastRow = Complaint::latest()->first();
+        $input['comp_no'] = ($lastRow->comp_no <> '')? $lastRow->comp_no + 1: 1000;
+
+        $complaint = Complaint::create($input);
+        $insert = [];
+
+        if ($request->hasfile('filedoc')) {
 
             $saveTo = 'uploads/complaints';
             $destinationPath = public_path().'/'.$saveTo; // upload path  
-            $files = $request->file('filepath');          
-            
-            $image = $files->getClientOriginalName();
 
-            $files->move($destinationPath, $image);
-
-            $input['filepath'] = $saveTo.'/'.$image;
+            foreach($request->file('filedoc') as $files) {         
             
-        }      
-        $complaint = Complaint::create($input);
+                $image = $files->getClientOriginalName();
+
+                $files->move($destinationPath, $image);
+
+                $insert[] = array('complaint_id' => $complaint->id, 
+                                'document_path' => $saveTo.'/'.$image,
+                                'created_at'  => \Carbon\Carbon::now(), # new \Datetime()
+                                'updated_at'  => \Carbon\Carbon::now()  # new \Datetime()
+                                );  
+            }
+            $check = DB::table('complaint_documents')->insert($insert);
+        }       
 
         $history = [
             'complaint_id' => $complaint->id,
@@ -149,8 +232,9 @@ class ComplaintController extends Controller
                     ->orderBy('created_at', 'DESC')
                     ->get();
 
-    
-        return view('complaint.show',compact('complaint', 'statuses', 'histories'));
+        $documents = DB::table('complaint_documents')->where('complaint_id',$id)->get()->pluck('document_path')->toArray();
+
+        return view('complaint.show',compact('complaint', 'statuses', 'histories', 'documents'));
     }
 
     // Change the order status
@@ -166,7 +250,7 @@ class ComplaintController extends Controller
         $complaint = Complaint::find($input['complaintid']);
         $old_status = $complaint->status;
 
-        if($old_status != $input['status']){
+     //  if($old_status != $input['status']){
 
             $update = [                       
                 'status' => $input['status']
@@ -184,9 +268,9 @@ class ComplaintController extends Controller
                 'updated_at'  => \Carbon\Carbon::now()  # new \Datetime()
             ];
             DB::table('complaint_histories')->insert($history);
-        }else{
-            return back()->with('error','You should select right status');
-        }
+        // }else{
+        //     return back()->with('error','You should select right status');
+        // }
 
         return redirect()->route('complaint.show', $complaint->id)
                         ->with('success','Complaint status updated successfully');
@@ -202,9 +286,25 @@ class ComplaintController extends Controller
     {
         //
         $complaint = Complaint::find($id);
-        $users = User::all()->pluck('fullname', 'id')->toArray(); 
+        $users = [];
+        if(auth()->user()->hasAnyRole(['Coordinator', 'Admin'])) { 
+            // admin, coordinator
+            $users = User::where('status', '=', 1)->get()->pluck('fullname', 'id')->toArray(); 
+
+        }else if(auth()->user()->hasRole('Team Lead')){
+            $users = [auth()->user()->id => auth()->user()->fullname];
+
+            $tusers =  User::where('parentid', '=', auth()->user()->id)->where('status', '=', 1)
+                    ->get()
+                    ->pluck('fullname', 'id')->toArray();
+
+            $users = $users + $tusers;
+        }
+
+        $documents = DB::table('complaint_documents')->where('complaint_id',$id)->get()->pluck('document_path')->toArray();
+
     
-        return view('complaint.edit',compact('complaint', 'users'));
+        return view('complaint.edit',compact('complaint', 'users', 'documents'));
     }
 
     /**
@@ -222,25 +322,34 @@ class ComplaintController extends Controller
             'description' => 'required',
             'priority' => 'required',
             'reported_by' => 'required', 
-            'filepath' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048'               
+            'filedoc.*' => 'mimes:jpeg,png,jpg,bmp,pdf'                
         ]); 
         
         $input = $request->all();
+        $insert = [];
 
         $complaint = Complaint::find($id);
         $oldfile = $complaint->filepath? $complaint->filepath : false;
+        
+        $complaint->update($input);
 
-        if ($request->hasfile('filepath')) {          
+        if ($request->hasfile('filedoc')) {          
 
             $saveTo = 'uploads/complaints';
             $destinationPath = public_path().'/'.$saveTo; // upload path  
-            $files = $request->file('filepath');          
+
+            foreach($request->file('filedoc') as $files) {
+                $image = $files->getClientOriginalName();
+
+                $files->move($destinationPath, $image);
+
+                $insert[] = array('complaint_id' => $id, 
+                                'document_path' => $saveTo.'/'.$image,
+                                'created_at'  => \Carbon\Carbon::now(), # new \Datetime()
+                                'updated_at'  => \Carbon\Carbon::now()  # new \Datetime()
+                                );  
+            }            
             
-            $image = $files->getClientOriginalName();
-
-            $files->move($destinationPath, $image);
-
-            $input['filepath'] = $saveTo.'/'.$image;
             if($oldfile){   
                 // old file deleted
                 $image_path = public_path().'/'.$oldfile; // upload path  
@@ -249,10 +358,10 @@ class ComplaintController extends Controller
                     File::delete($image_path);
                 }
             }
+            $check = DB::table('complaint_documents')->insert($insert);
             
         }
-        
-        $complaint->update($input);
+
                
         return redirect()->route('complaint.index')
                         ->with('success','Complaint updated successfully');
@@ -267,7 +376,22 @@ class ComplaintController extends Controller
      */
     public function destroy($id)
     {
-        //
+        //Complaint Images
+        $docqry = DB::table('complaint_documents')->where('complaint_id',$id);
+        $docObj = $docqry->get();
+
+        $destinationPath = public_path().'/'; // upload path   
+      
+        foreach($docObj as $key => $doc) {            
+            $image_path = $destinationPath.$doc->document_path;
+
+            if(File::exists($image_path)) {
+                File::delete($image_path);
+            }
+        }    
+
+        $docqry->delete();
+
         // Complaint Status history
         DB::table('complaint_histories')->where('complaint_id',$id)->delete();
 

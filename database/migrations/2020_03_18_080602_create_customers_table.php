@@ -27,10 +27,11 @@ class CreateCustomersTable extends Migration
             $table->string('technical_phone');
             $table->integer('refferedby')->default(0);
             $table->timestamps();
-            $table->tinyInteger('status')->default(0);
+            $table->tinyInteger('status')->default(1);
         });
 
         Schema::create('customer_documents', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('customer_id');
             $table->string('document_path');
             $table->boolean('isexpired')->default(0);

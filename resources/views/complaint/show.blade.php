@@ -32,7 +32,7 @@
           <div class="card-header">
             <h3 class="card-title">
               <i class="fas fa-text-width"></i>
-              Complaint Details - #{{ $complaint->id }}
+              Complaint Details - <b class="text-danger"> {{ $complaint->comp_no?$complaint->comp_no: '0' }}</b>
             </h3>
           </div>
           <!-- /.card-header -->
@@ -41,7 +41,7 @@
               <dt class="col-sm-4">Customr Account No.</dt>
               <dd class="col-sm-8">{{ $complaint->customer_acc_no }}</dd>
               <dt class="col-sm-4">Details</dt>
-              <dd class="col-sm-8">{{ $complaint->description }}</dd>         
+              <dd class="col-sm-8">{!! html_entity_decode($complaint->description)!!}</dd>         
               <dt class="col-sm-4">Priority</dt>
               <dd class="col-sm-8">
                   @switch($complaint->priority)
@@ -60,13 +60,39 @@
               <dt class="col-sm-4">Status</dt>
               <dd class="col-sm-8">{{ ucwords($complaint->status_name) }}</dd>             
               <dt class="col-sm-4">Posted Date</dt>
-              <dd class="col-sm-8">{{ date("d-m-Y", strtotime($complaint->created_at)) }}</dd>  
+              <dd class="col-sm-8">
+                @php
+                  $time = strtotime($complaint->created_at) + 60*60*4;
+                @endphp  
+                {{ date("d-m-Y H:i:s", $time)}}</dd>  
               @if($complaint->filepath)
                 <dd class="col-sm-12">   
-                   <img src="{{asset($complaint->filepath)}}" class="img-fluid img-thumbnail m-1 mht-100">
+                    @php
+                      $file_parts = pathinfo($complaint->filepath);
+                    @endphp
+
+                    @if($file_parts['extension'] == 'pdf')
+                      <a href="{{asset($complaint->filepath)}}" download>{{ explode("/",$complaint->filepath)[1] }}</a><br/>
+                    @else
+                      <a href="{{asset($complaint->filepath)}}" download><img src="{{asset($complaint->filepath)}}" class="img-fluid img-thumbnail m-1 mht-100"></a><br/>
+                    @endif
                 </dd>  
               @endif 
-                 
+
+              @if(count($documents) > 0) 
+                @foreach ($documents as $key => $doc)
+                    <dd id="{{$key}}" class="col-sm-12">                       
+                    @php
+                      $file_parts = pathinfo($doc);
+                    @endphp
+                    @if($file_parts['extension'] == 'pdf')
+                      <a href="{{asset($doc)}}" download>{{ explode("/",$doc)[1] }}</a><br/>
+                    @else
+                      <a href="{{asset($doc)}}" download><img src="{{asset($doc)}}" class="img-fluid img-thumbnail m-1 mht-100"></a>
+                    @endif
+                    </dd>
+                @endforeach
+              @endif
             </dl>            
           </div>
           <!-- /.card-body --> 
@@ -159,9 +185,14 @@
                 @foreach ($histories as $key => $hist)
                 <tr>
                   <th scope="row">{{ucwords($hist->status_name)}} </th>
-                  <td>{{$hist->comment}}</td>            
+                  <td width="40%">{{$hist->comment}}</td>            
                   <td>{{$hist->fullname}}</td>
-                  <td>{{date("d/m/Y", strtotime($hist->created_at))}}</td>
+                  <td>
+                    @php
+                      $time = strtotime($hist->created_at) + 60*60*4;
+                    @endphp  
+                    {{ date("d-m-Y H:i:s", $time)}}
+                  </td>
                 </tr>
                 @endforeach                            
                 </tbody>

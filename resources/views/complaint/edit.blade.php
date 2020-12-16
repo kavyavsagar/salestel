@@ -54,6 +54,10 @@
                 <div class="form-group">
                     <label for="complaint">Complaint</label>
                     {!! Form::textarea('description', null, ['placeholder' => 'Complaint Description','class' => 'form-control','id' => 'complaint', 'rows' => 4, 'cols' => 54]) !!}
+
+                    <!-- <textarea class="textarea" placeholder="Complaint Description" name="description"
+                          style="width: 100%; height: 200px; font-size: 14px; line-height: 18px; border: 1px solid #dddddd; padding: 10px;"><?=$complaint->description?></textarea> -->
+                    
                 </div> 
                 <div class="form-group">
                     <label for="priority">Priority</label>
@@ -63,12 +67,12 @@
                         <option value="high" {{ ( 'high' == $complaint->priority) ? 'selected' : '' }}>High</option>    
                     </select>
                 </div>
-                @hasanyrole('Coordinator|Admin') 
+                @hasanyrole('Coordinator|Admin|Team Lead')              
                 <div class="form-group">
                     <label>Reffered By:</label>
                     <select class="form-control" name="reported_by">   
                       <option value="">-- Select --</option>                
-                      @foreach ($users as $key => $value)                        
+                      @foreach ($users as $key => $value)
                         <option value="{{ $key }}" {{ ( $key == $complaint->reported_by) ? 'selected' : '' }}> 
                             {{ $value }} 
                         </option>
@@ -76,13 +80,13 @@
                     </select>                    
                 </div>  
                 @else
-                  <input type="hidden" name="reported_by" value="{{$complaint->reported_by}}">
+                  <input type="hidden" name="reported_by" value="{{Auth::id()}}">
                 @endhasanyrole                
                 <div class="form-group">
                     <label>Upload all documents:</label>
                     <div class="input-group">
                         <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="file-input" name="filepath" accept="image/jpeg,image/jpg,image/png,image/bmp,application/pdf" />
+                            <input type="file" class="custom-file-input" id="file-input" name="filedoc[]" accept="image/jpeg,image/jpg,image/png,image/bmp,application/pdf" multiple/>
                             <label class="custom-file-label" for="file-input">Choose file</label>
                         </div>
                         <div class="input-group-append">
@@ -91,7 +95,7 @@
                     </div>
                     <p class="small text-muted mt-1">documents should be in this formats (jpeg, png, jpg, bmp, pdf)</p>
                     <div id="file-error" class="text-danger mt-1"></div>
-                    <span class="text-danger">{{ $errors->first('filepath') }}</span>           
+                    <span class="text-danger">{{ $errors->first('filedoc') }}</span>           
                 </div>
                 <div class="form-group">
                      <div id="thumb-output"></div>
@@ -99,6 +103,22 @@
                     <div class="d-inline">    
                        <img src="{{asset($complaint->filepath)}}" class="img-fluid img-thumbnail m-1 mht-100">
                     </div>
+                    @endif
+                    @if(count($documents) > 0)                     
+                        @foreach ($documents as $key => $doc)
+                            
+                            <div id="{{$key}}" class="col-sm-12">                       
+                            @php
+                              $file_parts = pathinfo($doc);
+                            @endphp
+                            @if($file_parts['extension'] == 'pdf')
+                              <a href="{{asset($doc)}}" download>{{ explode("/",$doc)[1] }}</a><br/>
+                            @else
+                              <a href="{{asset($doc)}}" download><img src="{{asset($doc)}}" class="img-fluid img-thumbnail m-1 mht-100"></a>
+                            @endif
+                              <a href="javascript:void(0);" class="delimage" rel="">Delete</a>
+                            </div>
+                        @endforeach
                     @endif
                 </div>
             </div>
@@ -124,21 +144,27 @@ $(document).ready(function(){
         var data = $(this)[0].files; //this file data
          
         $.each(data, function(index, file){ //loop though each file
-            if(/(\.|\/)(gif|jpe?g|png)$/i.test(file.type)){ //check supported file type
-                var fRead = new FileReader(); //new filereader
-                fRead.onload = (function(file){ //trigger function on successful read
-                return function(e) {
-                    var img = $('<img/>').addClass('img-fluid img-thumbnail m-1 mht-100').attr('src', e.target.result); //create image element 
-                    $('#thumb-output').html(img); //append image to output element
-                };
-                })(file);
-                fRead.readAsDataURL(file); //URL representing the file's data.
-                $('#file-error').html("");
-            }else{              
-                $('#file-error').html("Selected file extension not allowed");
-                return;
-            };
-        });
+                if(/(\.|\/)(bmp|jpe?g|png)$/i.test(file.type) || file.type.match('application/pdf')){ //check supported file type
+                    var fRead = new FileReader(); //new filereader
+                    fRead.onload = (function(file){ //trigger function on successful read
+                        return function(e) {                           
+                            let preview = '';
+                            if(file.type.match('application/pdf')){
+                                preview = $('<p/>').addClass('text-danger m-1').html(file.name);
+                            }else{
+                                preview = $('<img/>').addClass('img-fluid img-thumbnail m-1 mht-100').attr('src', e.target.result); //create image element 
+                            }
+                            
+                            $('#thumb-output').append(preview); //append image to output element
+                        };
+                    })(file);
+                    fRead.readAsDataURL(file); //URL representing the file's data.
+                    $('#file-error').html("");
+                }else{                        
+                    $('#file-error').html("Selected file extension not allowed");
+                    return;
+                }; 
+            });
          
     }else{
         alert("Your browser doesn't support File API!"); //if File API is absent
@@ -146,13 +172,14 @@ $(document).ready(function(){
  });
 
  /*************************  ********************************/
-  $.ajaxSetup({
+    $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
     });
-    $('#customerext').keyup(function(){ 
-        var query = $(this).val();
+
+    var fnajx = function(value){ 
+        var query = value;      
         if(query != '')
         {
         // var _token = $('input[name="_token"]').val();
@@ -166,7 +193,37 @@ $(document).ready(function(){
             }
         });
         }
+    };
+    $( "#customerext" ).on({
+        keyup: function() {
+            console.log( "keyup over a div" );
+            let v = $(this).val();
+            fnajx(v);
+        },
+        paste: function(e) {
+            console.log( "paste left a div" );
+            var clipboardData = e.clipboardData || e.originalEvent.clipboardData || window.clipboardData;
+            var pastedData = clipboardData.getData('text');
+            fnajx(pastedData);
+        }
     });
+
+    // $('#customerext').keyup(function(){ 
+    //     var query = $(this).val();
+    //     if(query != '')
+    //     {
+    //     // var _token = $('input[name="_token"]').val();
+    //     $.ajax({
+    //         url:"{{ route('customer.fetch') }}",
+    //         method:"POST",
+    //         data:{query:query}, //, _token:_token
+    //         success:function(data){
+    //           $('#companyList').fadeIn();  
+    //           $('#companyList').html(data);
+    //         }
+    //     });
+    //     }
+    // });
 
     $(document).on('click', '#companyList > ul > li', function(){  
         let str = $(this).text();
@@ -174,6 +231,9 @@ $(document).ready(function(){
         $('#companyList').fadeOut();        
 
     }); 
+
+       // Summernote
+    $('.textarea').summernote();
 }); 
 </script>
 @endsection

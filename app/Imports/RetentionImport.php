@@ -34,10 +34,10 @@ class RetentionImport implements ToModel, WithHeadingRow, WithCalculatedFormulas
     // */
     public function model(array $row)
     {
-      
-        if(!array_filter($row)) { return null;}
+    
+        if(!array_filter($row)) { return null;}  
 
-        if(isset($row['account_no']) && $row['account_no']){           
+        if(isset($row['account_no']) && $row['account_no']){            
 
             if(!trim($row['gsm_total'])){
                 return null;
@@ -52,28 +52,26 @@ class RetentionImport implements ToModel, WithHeadingRow, WithCalculatedFormulas
             #### Order Plans  
             $plan_insert = []; $res = '';
 
-            if(trim($row["data_100gb_600"]) != null && trim($row["data_100gb_600"]) >0 ){
-                $q = (int) trim($row["data_100gb_600"]);
+            if(trim($row["data_100_gb"]) != null && trim($row["data_100_gb"]) >0 ){
+                $q = (int) trim($row["data_100_gb"]);
                 $p = 600;
 
                 $plan_insert = [
-                                    "order_id"   => $order->id,
-                                    "price"      => $p,
-                                    "plan"       => "data 100gb",
-                                    "plan_id"    => 4,
-                                    "plan_type"  => 'MNP',    
-                                    "quantity"   => $q,
-                                    "total"      => ($q * $p)
-                                ];
-              
+                                "order_id"   => $order->id,
+                                "price"      => $p,
+                                "plan"       => "Data 100GB",
+                                "plan_id"    => 3,
+                                "plan_type"  => "Old",   
+                                "quantity"   => $q,
+                                "total"      => ($q * $p)
+                            ];
                 return new OrderPlan($plan_insert);
+            
             }else{
                 return null;
-            }
-           
-           
+            } 
+        }   
 
-        }
 
         return null;
 

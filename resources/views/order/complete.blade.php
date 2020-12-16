@@ -81,10 +81,14 @@
                     </button>
                   </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group mr-2">
+                  <input type="text" class="form-control" name="searhkey" placeholder="Company Name.." 
+                  value="{{ (isset($fields['searhkey']) && $fields['searhkey'] <> '')? $fields['searhkey']: ''}}" />
+                </div>
+                <div class="form-group ">
                     <button type="submit" class="btn btn-primary btn-submit mr-2">Search</button>
-                    @hasanyrole('Coordinator|Admin')
-                      <button type="button" class="btn btn-success btn-export mr-2">Export CSV</button>
+                    @hasanyrole('Coordinator|Admin|Team Lead')
+                      <button type="button" class="btn btn-success btn-export mr-2 disabled">Export CSV</button>
                     @endhasanyrole
                     <a href="{{ route('order.complete') }}" class="btn btn-default btn-reset">Reset</a>
                 </div>
@@ -100,23 +104,33 @@
             <tr>
                <th>OrderId</th>
                <th>Customer</th>
-               <th>Status</th>
+               <th>Activation On</th>
                <th>Total</th>
                <th>Reffered By</th>
-               <th>Created At</th>
+               <th>Updated At</th>
                <th>Action</th>                     
             </tr>
             </thead>
             <tbody> 
+              @php
+                $total = 0; $odd= '';
+              @endphp
              @foreach ($data as $key => $order)
-              <tr>
+              @php
+                $time = strtotime($order->updated_at) + 60*60*4;
+                $total += ($order->order_status_id == 23)? $order->partial_amount: $order->total_amount;
+                $odd = ($order->order_status_id == 23)? 'bg-info text-white': '';
+              @endphp
+              <tr class="{{$odd}}">
                 <td>{{ $order->id }}</td>
                 <td>{{ $order->company_name }} <!-- ({{ $order->account_no }}) --></td>
-                <td>{{ ucfirst(str_replace("_", " ", $order->status)) }}</td>
+                <td class="text-danger">{{ $order->activation_date }}
+                <!-- {{ ucfirst(str_replace("_", " ", $order->status)) }} -->
+                </td>
                 <td>
-                <span class="gray" title="{{ ucfirst($order->plan_type) }}"><i class="fas {{ ($order->plan_type == 'mobile') ? 'fa-mobile-alt' : 'fa-phone-alt' }}"></i></span>&nbsp; {{ $order->total_amount }} </td>
+                <span class="gray" title="{{ ucfirst($order->plan_type) }}"><i class="fas {{ ($order->plan_type == 'mobile') ? 'fa-mobile-alt' : 'fa-phone-alt' }}"></i></span>&nbsp; {{($order->order_status_id == 23)? $order->partial_amount: $order->total_amount }} </td>
                 <td>{{ $order->fullname }}</td>
-                <td>{{ date("Y-m-d",strtotime($order->created_at)) }}</td>
+                <td>{{ date("Y-m-d H:i:s", $time) }}</td>
                 <td>
                    <a class="btn" href="{{  route('order.show',$order->id) }}" title="View Orders"><i class="fas fa-eye"></i></a>  
                 </td>
@@ -127,10 +141,10 @@
             <tr>
                <th>OrderId</th>
                <th>Customer</th>
-               <th>Status</th>
-               <th>Total</th>
+               <th>Activation On</th>
+               <th>Total = <span class="text-danger">{{$total}}</span></th>
                <th>Reffered By</th>
-               <th>Created At</th>
+               <th>Updated At</th>
                <th>Action</th>             
             </tr>
             </tfoot>

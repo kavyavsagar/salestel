@@ -73,7 +73,7 @@
                         </div> 
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label>Company Name:</label>
+                                <label>Company Name: <span class="help-block">*</span></label>
                                 {!! Form::text('company_name', null, array('placeholder' => 'Company Name','class' => 'form-control')) !!}
                             </div>
                         </div>                         
@@ -81,13 +81,13 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label>Account Number:</label>
+                                <label>Account Number: <span class="help-block">*</span></label>
                                 {!! Form::text('account_no', null, array('placeholder' => 'Account No.','class' => 'form-control')) !!}
                             </div>
                         </div>    
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label>Location:</label>
+                                <label>Location: <span class="help-block">*</span></label>
                                 {!! Form::text('location', null, array('placeholder' => 'Location','class' => 'form-control')) !!}
                             </div>
                         </div>
@@ -101,19 +101,19 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-4 col-md-4">
                             <div class="form-group">
-                                <label>Person Name:</label>
+                                <label>Person Name: <span class="help-block">*</span></label>
                                 {!! Form::text('authority_name', null, array('placeholder' => 'Authority Name','class' => 'form-control')) !!}
                             </div>
                         </div>      
                         <div class="col-xs-12 col-sm-4 col-md-4">
                             <div class="form-group">
-                                <label>Email:</label>
+                                <label>Email: <span class="help-block">*</span></label>
                                 {!! Form::text('authority_email', null, array('placeholder' => 'Authority Email','class' => 'form-control')) !!}
                             </div>
                         </div>
                         <div class="col-xs-12 col-sm-4 col-md-4">
                             <div class="form-group">
-                                <label>Mobile</label>
+                                <label>Mobile <span class="help-block">*</span></label>
                                 {!! Form::text('authority_phone', null, array('placeholder' => 'Authority Mobile','class' => 'form-control')) !!}
                             </div>
                         </div>
@@ -127,19 +127,19 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-4 col-md-4">
                             <div class="form-group">
-                                <label>Contact Name:</label>
+                                <label>Contact Name: <span class="help-block">*</span></label>
                                 {!! Form::text('technical_name', null, array('placeholder' => 'Technical Name','class' => 'form-control')) !!}
                             </div>
                         </div>
                         <div class="col-xs-12 col-sm-4 col-md-4">
                             <div class="form-group">
-                                <label>Email:</label>
+                                <label>Email: <span class="help-block">*</span></label>
                                 {!! Form::text('technical_email', null, array('placeholder' => 'Technical Email','class' => 'form-control')) !!}
                             </div>
                         </div>
                         <div class="col-xs-12 col-sm-4 col-md-4">
                             <div class="form-group">
-                                <label>Mobile</label>
+                                <label>Mobile <span class="help-block">*</span></label>
                                 {!! Form::text('technical_phone', null, array('placeholder' => 'Technical Mobile','class' => 'form-control')) !!}
                             </div>
                         </div>  
@@ -147,10 +147,10 @@
                     <div class="row">         
                         <div class="col-xs-12 col-sm-6 col-md-6"> 
                             <div class="form-group">
-                                <label>Upload all documents:</label>
+                                <label>Upload all documents: </label>
                                 <div class="input-group">
                                     <div class="custom-file">
-                                        <input type="file" class="custom-file-input" id="file-input" name="image[]" multiple="" 
+                                        <input type="file" class="custom-file-input" id="file-input" name="image[]" multiple
                                         accept="image/jpeg,image/jpg,image/png,image/bmp,application/pdf" />
                                         <label class="custom-file-label" for="file-input">Choose file</label>
                                     </div>
@@ -162,6 +162,13 @@
                                 <div id="file-error" class="text-danger mt-1"></div>
                                 <span class="text-danger">{{ $errors->first('image') }}</span>           
                             </div>
+
+                            <div id="file_div">
+                               <div>
+                                <input type="file" name="file[]">
+                                <input type="button" id="add_file" value="ADD MORE">
+                               </div>
+                              </div>
                         </div>
                         <div class="col-xs-12 col-sm-6 col-md-6">
                         @hasanyrole('Coordinator|Admin')
@@ -229,14 +236,20 @@
                         <div class="form-group">
                             <select class="form-control" name="plan_type" id="mptype"> 
                                 <option value="">--PLAN TYPE--</option>
-                                <option value="New">New</option>
+                                @foreach ($planStatus as $key => $value) 
+                                <option value="{{ $key }}"> 
+                                    {{ $value }} 
+                                </option>
+                                @endforeach  
+                              <!--   <option value="New">New</option>
                                 <option value="MNP">MNP</option>
                                 <option value="Migrated">Migrated</option>
                                 <option value="Renewal">Renewal</option>
                                 <option value="Upgrade">Upgrade</option>
                                 <option value="Downgrade">Downgrade</option>
+                                <option value="Cancel">Cancel</option>
                                 <option value="Vas">Vas</option>
-                                <option value="RPC">RPC - Rate Plan Change</option>
+                                <option value="RPC">RPC - Rate Plan Change</option> -->
                             </select>          
                         </div>
                         </div>
@@ -253,7 +266,7 @@
                         </div>
                         <div class="col-xs-12 col-sm-2 col-md-2">
                             <div class="form-group">
-                                <button type="button" class="btn btn-primary" id="mobile-add">Add New</button>
+                                <button type="button" class="btn btn-primary" id="mobile-add">Add</button>
                             </div>
                         </div>
                     </div>   
@@ -319,14 +332,20 @@
                         <div class="form-group">
                             <select class="form-control" name="fixed_type" id="fptype"> 
                                 <option value="">--PLAN TYPE--</option>
-                                <option value="New">New</option>
+                                @foreach ($planStatus as $key => $value) 
+                                <option value="{{ $key }}"> 
+                                    {{ $value }} 
+                                </option>
+                                @endforeach  
+                                <!-- <option value="New">New</option>
                                 <option value="MNP">MNP</option>
                                 <option value="Migrated">Migrated</option>
                                 <option value="Renewal">Renewal</option>
                                 <option value="Upgrade">Upgrade</option>
                                 <option value="Downgrade">Downgrade</option>
+                                <option value="Cancel">Cancel</option>
                                 <option value="Vas">Vas</option>
-                                <option value="RPC">RPC - Rate Plan Change</option>
+                                <option value="RPC">RPC - Rate Plan Change</option> -->
                             </select>          
                         </div>
                         </div>
@@ -337,7 +356,7 @@
                         </div>
                         <div class="col-xs-12 col-sm-3 col-md-3">
                             <div class="form-group">
-                                <button type="button" class="btn btn-primary" id="fixed-add">Add New</button>
+                                <button type="button" class="btn btn-primary" id="fixed-add">Add</button>
                             </div>
                         </div>
                     </div>   
@@ -400,7 +419,7 @@
                             <div class="form-group float-right">
                                 <button type="button" class="btn btn-outline-secondary btnPrevious mr-1" data-id="fixed">Previous</button>
                                 <button type="submit" class="btn btn-outline-success btn-submit">Confirm & Save</button>
-                                <span id="loader"></span>
+                                <div id="loader"></div>
                             </div>
                         </div>
                     </div>
@@ -410,7 +429,7 @@
           </div>
             <!-- /.card-body -->
           <div class="card-footer">
-              <a class="btn btn-default float-right" href="{{ route('order.index') }}"> Cancel</a>
+              <a class="btn btn-secondary float-right" href="{{ route('order.index') }}"> Back</a>
           </div>          
         </div>
         <!-- /.card -->
@@ -426,6 +445,17 @@
 <script type="text/javascript">    
 $(document).ready(function(){
 
+    $('#add_file').on('click', function(e){
+        e.preventDefault();   
+
+        $("#file_div").append("<div><input type='file' name='file[]'><input type='button' value='REMOVE' id='remove_file'></div>");
+    });
+    $('#remove_file').on('click', function(e){
+        e.preventDefault();   
+
+        $(e).parent().remove();
+    });
+  
     // ***************** MOBILE ***************** //
     var rowCounter = 0;
     $('#mobile-add').on('click', function(e){ //on file input change
@@ -455,11 +485,14 @@ $(document).ready(function(){
             ptype = $('#mptype').val(),
             phoneno = $('#phoneno').val(),
             qty = parseInt($('#mqty').val()),
-            total = (qty >0)? parseInt(price * qty): 0,
+            total =  parseInt(price * qty),
             plan = splan.split("-"); 
 
-        if(ptype == 'Upgrade' || ptype == 'Downgrade'){
+        if(ptype == 'Upgrade' || ptype == 'Downgrade' || ptype == 'Vas' || ptype == 'RPC'){
             qty = total = 0;
+        }else if(ptype == 'Cancel'){
+            qty =  qty < 0 ? qty : (qty > 0 ? (qty * -1) : -1);
+            total = parseInt(price * qty);
         }
 
         let mobd = JSON.stringify({"price": price, "planid": parseInt(plan[0]), "plan": plan[1], "plan_type": ptype, "phoneno": phoneno, "qty": qty, "total": total});        
@@ -514,9 +547,12 @@ $(document).ready(function(){
             total = parseInt(price * qty),
             plan = splan.split("-");  
 
-        if(fptype == 'Upgrade' || fptype == 'Downgrade'){
-            qty = total = 0;
-        }  
+        if(fptype == 'Upgrade' || fptype == 'Downgrade' || fptype == 'Vas' || fptype == 'RPC'){
+            qty = total = 0;        
+        }else if(fptype == 'Cancel'){
+            qty =  qty < 0 ? qty : (qty > 0 ? (qty * -1) : -1);
+            total = parseInt(price * qty);
+        }
 
         let fixd = JSON.stringify({"price": price, "planid": parseInt(plan[0]), "plan": plan[1], "plan_type": fptype, "qty": qty, "total": total});        
 
@@ -613,7 +649,7 @@ $(document).ready(function(){
             formData.append('fixed', JSON.stringify(fxdData));
 
         if(loading){
-            $('#loader').html('Loading...');
+            $('#loader').html('Please wait it will take few seconds to complete...');
         }
 
         $.ajax({
@@ -662,15 +698,15 @@ $(document).ready(function(){
         {
              
             var data = $(this)[0].files; //this file data
-             
             $.each(data, function(index, file){ //loop though each file
-                if(/(\.|\/)(bmp|jpe?g|png)$/i.test(file.type) || file.type.match('application/pdf')){ //check supported file type
+               if(/(\.|\/)(bmp|jpe?g|png)$/i.test(file.type) || file.type.match('application/pdf')){ 
+                    //check supported file type
                     var fRead = new FileReader(); //new filereader
                     fRead.onload = (function(file){ //trigger function on successful read
                         return function(e) {                           
                             let preview = '';
                             if(file.type.match('application/pdf')){
-                                preview = $('<span/>').addClass('text-danger m-1').html(file.name);
+                                preview = $('<p/>').addClass('text-danger m-1').html(file.name);
                             }else{
                                 preview = $('<img/>').addClass('img-fluid img-thumbnail m-1 mht-100').attr('src', e.target.result); //create image element 
                             }
@@ -691,8 +727,25 @@ $(document).ready(function(){
         }
     });
     /************************* L ********************************/
-    $('#customerext').keyup(function(){ 
-        var query = $(this).val();
+    // $('#customerext').keyup(function(){ 
+    //     var query = $(this).val();
+    //     if(query != '')
+    //     {
+    //     // var _token = $('input[name="_token"]').val();
+    //     $.ajax({
+    //         url:"{{ route('customer.fetch') }}",
+    //         method:"POST",
+    //         data:{query:query}, //, _token:_token
+    //         success:function(data){
+    //           $('#companyList').fadeIn();  
+    //           $('#companyList').html(data);
+    //         }
+    //     });
+    //     }
+    // });
+
+    var fnajx = function(value){ 
+        var query = value;      
         if(query != '')
         {
         // var _token = $('input[name="_token"]').val();
@@ -705,6 +758,19 @@ $(document).ready(function(){
               $('#companyList').html(data);
             }
         });
+        }
+    };
+    $( "#customerext" ).on({
+        keyup: function() {
+            console.log( "keyup over a div" );
+            let v = $(this).val();
+            fnajx(v);
+        },
+        paste: function(e) {
+            console.log( "paste left a div" );
+            var clipboardData = e.clipboardData || e.originalEvent.clipboardData || window.clipboardData;
+            var pastedData = clipboardData.getData('text');
+            fnajx(pastedData);
         }
     });
 

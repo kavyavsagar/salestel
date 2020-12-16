@@ -109,7 +109,7 @@
           <div class="card-header">
             <h3 class="card-title">
               <i class="fas fa-text-width"></i>
-              Documents
+              Documents              
             </h3>
           </div>
           <!-- /.card-header -->
@@ -121,12 +121,30 @@
                 @endif
                 @foreach ($documents as $key => $doc)
                     <div id="{{$key}}" class="d-inline">                       
-                       <img src="{{asset($doc)}}" class="img-fluid img-thumbnail m-1 mht-100">
+                    @php
+                      $file_parts = pathinfo($doc);
+                    @endphp
+                    @if($file_parts['extension'] == 'pdf')
+                      <a href="{{asset($doc)}}" download>{{ explode("/",$doc)[1] }}</a><br/>
+                    @else
+                       <a href="{{asset($doc)}}" download><img src="{{asset($doc)}}" class="img-fluid img-thumbnail m-1 mht-100"></a>
+                    @endif
                     </div>
                 @endforeach
+                
               </dd>       
             </dl>
           </div>
+          @if(count($documents) > 0) 
+          <div class="card-footer"> 
+            @can('customer-delete')
+               {!! Form::open(['method' => 'DELETE','route' => ['customer.destroy', $customer->id],'style'=>'display:inline']) !!}
+              <input type="hidden" name="doc_del" value="true">
+              <button type="submit" class="btn btn-danger" title="Delete" onclick="return confirmDel('{{ $customer->company_name }}' );"><i class="fas fa-trash"></i> Clear All</button>
+              {!! Form::close() !!}
+            @endcan
+          </div>
+          @endif
           <!-- /.card-body -->  
         </div>
       </div>
@@ -190,5 +208,13 @@
 
     </div>
 </section>
-
+<script type="text/javascript">
+function confirmDel(name){
+  if(confirm('Are you sure to delete all documents of '+name+' ?')){
+    return true;
+  }else{
+    return false;
+  }
+}
+</script>
 @endsection          

@@ -15,6 +15,7 @@ class CreateComplaintsTable extends Migration
     {
         Schema::create('complaints', function (Blueprint $table) {
             $table->id();
+            $table->integer('comp_no')->unique();
             $table->string('customer_acc_no');
             $table->text('description');
             $table->enum('priority', ['high','medium','low']);

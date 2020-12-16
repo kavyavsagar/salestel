@@ -1,5 +1,17 @@
 $(document).ready(function(){
 
+/** add active class and stay opened when selected */
+var url = window.location;
+
+// for sidebar menu entirely but not cover treeview
+$('ul.nav-sidebar a').filter(function() {
+    return this.href == url;
+}).addClass('active');
+
+// for treeview
+$('ul.nav-treeview a').filter(function() {
+    return this.href == url;
+}).parentsUntil(".nav-sidebar > .nav-treeview").addClass('menu-open').prev('a').addClass('active');
 
   /****************** Data tables ***********************/
     $('#order-status-tbl').DataTable({
@@ -39,13 +51,9 @@ $(document).ready(function(){
       "responsive": true,
     });
     $('#complaint-tbl').DataTable({
-      "paging": false,
-      "lengthChange": false,
-      "searching": false,
-      "ordering": true,
-      "info": true,
-      "autoWidth": false,
       "responsive": true,
+      "autoWidth": false,
+      "order": [[ 0, "desc" ]],
     });
     $('#order-tbl').DataTable({
       "paging": false,
@@ -68,8 +76,15 @@ $(document).ready(function(){
       "autoWidth": false
     });
 
-    /****************** End Data tables ***********************/
+     $('#task-tbl').DataTable({
+      "responsive": true,
+      "autoWidth": false,
+      "order": [[ 0, "desc" ]],
+    });
 
+    /****************** End Data tables ***********************/
+  //Timepicker
+   
         //Date range as a button
     $('#daterange-btn').daterangepicker(
       {  
@@ -101,9 +116,17 @@ $(document).ready(function(){
 
     $('#fdatemask').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' });
 
+    $('#reminder_date').inputmask('dd/mm/yyyy', { 'placeholder': 'dd/mm/yyyy' });
+
+        //Timepicker
+    $('#datetimepicker').datetimepicker({
+      format: 'LT'
+    });
+
     $("input[data-bootstrap-switch]").each(function(){
       $(this).bootstrapSwitch('state', $(this).prop('checked'));
       
     });
+
 });
 

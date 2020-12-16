@@ -42,8 +42,12 @@
     <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
     <!-- daterange picker -->
     <link rel="stylesheet" href="{{ asset('plugins/daterangepicker/daterangepicker.css') }}">
+    <!-- Tempusdominus Bbootstrap 4 -->
+    <link rel="stylesheet" href="{{ asset('plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css') }}">
     <!-- Toastr -->
     <link rel="stylesheet" href="{{ asset('plugins/toastr/toastr.min.css') }}">
+    <!-- summernote -->
+    <link rel="stylesheet" href="{{ asset('plugins/summernote/summernote-bs4.css') }}">
     <!-- Theme style -->
     <link rel="stylesheet" href="{{ asset('dist/css/adminlte.min.css') }}">
     <!--  Custom Css -->
@@ -112,6 +116,45 @@
         });
       });
     }
+    $(document).ready(function() {
+      var todo = <?=$todo['task']?>;
+     
+      if(todo.length> 0){
+        let astr ='<ul>';
+        $.each(todo, function(index, item){
+          astr += '<li>'+item['description']+'</li>';
+        });
+        astr +='</ul>'
+         
+        $(document).Toasts('create', {
+          title: 'Todo - Today',
+          position: 'bottomRight',
+          class: 'bg-info', 
+          body: astr
+        })
+      }
+      /************************************/
+      var dsr = <?=$todo['dsr']?>;
+     
+      if(dsr.length> 0){
+        let dsr_str ='<ul>';
+        $.each(dsr, function(index, item){
+          let now = new moment(item['reminder_date']);
+
+          dsr_str += '<li>'+item['company']+' | '+item['phone']+' | <b>'+now.format("hh:mm A")+'</b></li>';
+        });
+        dsr_str +='</ul>'
+         
+        $(document).Toasts('create', {
+          title: 'DSR Reminder',
+          // position: 'bottomLeft',
+          class: 'bg-warning', 
+          body: dsr_str
+        })
+      }
+      
+    });
+
     </script>  
     
     <!-- REQUIRED SCRIPTS --> 
@@ -130,12 +173,17 @@
     <script src="{{ asset('plugins/moment/moment.min.js') }}"></script>
     <script src="{{ asset('plugins/inputmask/min/jquery.inputmask.bundle.min.js') }}"></script>
     <script src="{{ asset('plugins/daterangepicker/daterangepicker.js') }}"></script>
+    <!-- Tempusdominus Bootstrap 4 -->
+    <script src="{{ asset('plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js') }}"></script>
     <!-- Bootstrap Switch -->
     <script src="{{ asset('plugins/bootstrap-switch/js/bootstrap-switch.min.js') }}"></script>
     <!-- Toastr -->
     <script src="{{ asset('plugins/toastr/toastr.min.js') }}"></script>
     <!-- ChartJS -->
     <script src="{{ asset('plugins/chart.js/Chart.min.js') }}"></script>
+    <!-- Summernote -->
+    <script src="{{ asset('plugins/summernote/summernote-bs4.min.js') }}"></script>
+
     <!-- AdminLTE App -->
     <script src="{{ asset('dist/js/adminlte.min.js') }}"></script>
     

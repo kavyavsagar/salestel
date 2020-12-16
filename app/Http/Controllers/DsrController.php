@@ -15,9 +15,13 @@ use App\User;
 use App\Customer;
 use App\Pricing;
 use App\Plan;
+use App\PlanStatus;
 use App\OrderStatus;
 use App\Order;
-use App\Exports\OrderExport;
+use App\Exports\DsrExport;
+
+use App\Dsr;
+use App\DsrStatus;
 
 class DsrController extends Controller
 {
@@ -34,7 +38,17 @@ class DsrController extends Controller
          $this->middleware('permission:dsr-create', ['only' => ['create','store']]);
          $this->middleware('permission:dsr-edit', ['only' => ['edit','update']]);
          $this->middleware('permission:dsr-delete', ['only' => ['destroy']]);
-    }    
+    } 
+    /********** Export **************
+    */
+    public function exportCSV(Request $request)
+    {   
+
+        $input = $request->all();
+
+        $date = now();
+        return Excel::download(new DsrExport($input), 'DSR'.$date.'.xlsx');
+    }   
     /**
      * Display a listing of the resource.
      *
@@ -45,15 +59,23 @@ class DsrController extends Controller
        
         $input = $request->all();
 
+        $dsrstatus = DB::table('dsr_statuses')->orderBy('id', 'ASC')                   
+                    ->get()
+                    ->pluck('name', 'id')->toArray();
+
         // Users
-        $arUser = User::all()->toArray();        
+        $arUser = User::where('status', '1')->orderBy('fullname', 'ASC')->get()->toArray();        
 
         $Team = [];       
 
         $tusers = []; $users =[]; $unique_parent =[];
         foreach ($arUser as $key => $us) {
       
-            $users[$us['id']] =  $us['fullname'];
+            if(auth()->user()->hasAnyRole(['Coordinator', 'Admin'])) { 
+                // admin, coordinator
+                $users[$us['id']] =  $us['fullname'];
+            }
+
 
             // get unique parent ids
             if($us['parentid'] !=0 && !in_array($us['parentid'], $unique_parent)){
@@ -63,8 +85,10 @@ class DsrController extends Controller
             if($us['parentid'] == auth()->user()->id || 
                 (isset($input['parentid']) && $input['parentid'] == $us['parentid'])){               
                 array_push($tusers, $us['id']);
+                $users[$us['id']] =  $us['fullname'];
             }
-        }
+        }//
+        
 
         if(isset($input['parentid']) && $input['parentid'] !=0 ){   // search by team
             array_push($Team, $input['parentid']); 
@@ -79,58 +103,46 @@ class DsrController extends Controller
             if(auth()->user()->hasRole('Team Lead')) {  // for merging team with team lead
                 $Team = array_merge($Team, $tusers);
             } 
-        } 
-        $custIds = [];
+        }       
 
-        if(!empty($Team)){
-            $custIds = DB::table('customers')->whereIn('customers.refferedby', $Team)
-                    ->get()
-                    ->pluck('id')->toArray();
-        }
-
-        $query = DB::table('orders')
-            ->join('order_statuses', 'order_statuses.id', '=', 'orders.order_status_id')
-            ->join('customers', 'customers.id', '=', 'orders.customer_id')
-            ->join('users', 'users.id', '=', 'customers.refferedby')
-            ->select('order_statuses.name AS status','customers.company_name', 'customers.account_no',  'users.fullname', 'orders.sales_priority', 'orders.total_amount', 'orders.exp_closing_date', 'orders.created_at', 'orders.id', 'orders.plan_type')
-            ->where('orders.order_status_id','=', 14);  // initial
-        
-        if(!empty($custIds)){ 
+        $query = DB::table('dsrs as dsr')  
+            ->join('users as u', 'u.id', '=', 'dsr.refferedby')  
+            ->join('dsr_statuses as st', 'st.id', '=', 'dsr.dsr_status')          
+            ->select('dsr.*', 'u.fullname', 'st.name as status'); // initial
+             
+        if(!empty($Team)){ 
+          
             // condition applied for search by parent or team lead/agent login or search by user
-            $query->whereIn('orders.customer_id', $custIds);    
+            $query->whereIn('dsr.refferedby', $Team);    
         }else{
             if( (isset($input['parentid']) && $input['parentid'] >0) || 
                 (isset($input['userid']) && $input['userid'] >0) ) { 
-                $query->where('orders.customer_id', 0); 
+                $query->where('dsr.refferedby', 0); 
             }
+        }  
+
+        if(isset($input['dsr_status']) && $input['dsr_status']){
+            $query->where('dsr.dsr_status', '=', $input['dsr_status']); 
         }
-        
+
         if(isset($input['start_date']) && $input['start_date'] != ""
             && isset($input['end_date']) && $input['end_date'] != ""){  // Search by dates
             
             $from =  new Carbon($input['start_date']);           
             $to =   new Carbon($input['end_date']);
             
-           $query->whereBetween('orders.created_at', array($from.'.000000', $to->endOfDay().'.000000' ));          
+           $query->whereBetween('dsr.updated_at', array($from.'.000000', $to->endOfDay().'.000000' ));          
         }
 
-        $query->orderBy('orders.id', 'DESC');
-        $data = $query->paginate(25)->appends(request()->query());
+        $query->orderBy('dsr.id', 'DESC');
+        $data = $query->paginate(100)->appends(request()->query());
 
         $fields = $input;
-        
-        return view('dsr.index',compact('data', 'users', 'unique_parent', 'fields'))
+
+        return view('dsr.index',compact('data', 'users', 'unique_parent', 'fields', 'dsrstatus'))
             ->with('i', ($request->input('page', 1) - 1) * 10);
     }
-    
-    public function exportCSV(Request $request)
-    {   
-
-        $input = $request->all();
-
-        $date = now();
-        return Excel::download(new OrderExport($input), 'order'.$date.'.xlsx');
-    }
+        
   
     /**
      * Show the form for creating a new resource.
@@ -139,27 +151,11 @@ class DsrController extends Controller
      */
     public function create()
     {
-        //
-        $mob_prices = Pricing::orderBy('amount','ASC')->where('plan_type', 'mobile')->get()
-                    ->pluck('amount', 'id')->toArray();
+        //        
+        $dsrStatus = DsrStatus::orderBy('id','ASC')->get()
+                        ->pluck('name', 'id')->toArray();
 
-        $fxd_prices = Pricing::orderBy('amount','ASC')->where('plan_type', 'fixed')->get()
-                    ->pluck('amount', 'id')->toArray();
-
-        $mob_plans = Plan::orderBy('plan','ASC')->where('plan_type', 'mobile')->get()
-                    ->pluck('plan', 'id')->toArray();
-
-        $fxd_plans = Plan::orderBy('plan','ASC')->where('plan_type', 'fixed')->get()
-                    ->pluck('plan', 'id')->toArray();
-        
-
-        $users = User::all()->pluck('fullname', 'id')->toArray(); 
-
-        $customers = Customer::all()->pluck('company_name', 'id')->toArray(); 
-
-
-        return view('dsr.create',compact('users', 'customers', 'mob_prices', 'fxd_prices', 'mob_plans', 'fxd_plans'));
-
+        return view('dsr.create',compact('dsrStatus'));
     }
 
     /**
@@ -172,59 +168,48 @@ class DsrController extends Controller
     {     
 
         $this->validate($request, [
-            'company_name' => 'required',
-            //'account_no' => 'required',
-            'location'  => 'required',
-            'authority_name' => 'required',          
-            'authority_phone' => 'required',
-            'technical_name' => 'required',
-            'technical_email' => 'required|email',
-            'technical_phone' => 'required',                
+            'company' => 'required',
+        //    'contact_name' => 'required',          
+            'phone' => 'required',          
+        //    'email' => 'email', //required|
+        //    'remarks' => 'required',                
             'refferedby' => 'required',
-            //'image' => 'required',
-            'image.*' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048',
-            'order_status' => 'required',
-            'sales_priority' => 'required'
+            'dsr_status' => 'required'
         ]); 
 
         $input = $request->all();
 
-        if(isset($input['customerid']) && $input['customerid'] !=0){
-            //update customer
-            $cid = $input['customerid'];
-            $this->validate($request, [
-                'authority_email' => 'required|email|unique:customers,authority_email,'.$cid, 
-                ]);
-            // $exists = Customer::where('authority_email',$input['authority_email'])
-            //                 ->where('id', '<>' , $cid)
-            //                 ->count();
-            // if(!$exists)
-            $input['customer_id'] = app(CustomerController::class)->updateCustomer($input, $request, $cid);
-             
-        }else{
-            // Create Customer
-            $this->validate($request, [
-                'authority_email' => 'required|email|unique:customers,authority_email'
-                ]);
-            $input['customer_id'] = app(CustomerController::class)->createCustomer($input, $request); 
-        }     
+        $dsrInsert = [
+            'company'       => $input['company'],
+            'location'      =>  $input['location'],
+            'contact_name'  => $input['contact_name'],        
+            'phone'         => $input['phone'],       
+            'email'         => $input['email'],
+            'remarks'       => $input['remarks'],      
+            'refferedby'    => $input['refferedby'],
+            'dsr_status'    => $input['dsr_status'],
+        ];
 
-        $res_m = $res_f = '';
+        $dsrInsert = $input;
+        if(isset($input['reminder_date'])){
+            $dsrInsert['reminder_date'] = date("Y-m-d H:i:s", strtotime($input['reminder_date']));
+        }
+        if(isset($input['expected_closing'])){
+            $dsrInsert['expected_closing'] = date("Y-m-d", strtotime($input['expected_closing']));
+        }
+
+        $dsr = Dsr::create($dsrInsert);
+
+        $res_m = '';
         // For MOBILE
-        $input['mobile'] = json_decode($input['mobile']); 
-        if(isset($input['mobile']) && !empty($input['mobile']) ){               
+        $input['plandetails'] = json_decode($input['plandetails']); 
+        if(isset($input['plandetails']) && !empty($input['plandetails']) ){               
 
-            $res_m = $this->insertOrderPlan($input, 'mobile');
+            $res_m = $this->insertDsrPlan($input, $dsr->id);
         }
 
-        // For FIXED
-        $input['fixed'] = json_decode($input['fixed']);
-        if(isset($input['fixed']) && !empty($input['fixed'])){              
-            
-            $res_f = $this->insertOrderPlan($input, 'fixed');
-        }
-        
-        if($res_m || $res_f){
+    
+        if($dsr || $res_m){
             return response()->json(['success'=>'You have successfully placed a DSR.']);
         }
         return response()->json(['error'=>'There is an error occured while placing a DSR.']);
@@ -232,227 +217,65 @@ class DsrController extends Controller
     }
 
     // place mobile/fixed orders with plans and status
-    public function insertOrderPlan($input, $ikey){
+    public function insertDsrPlan($input, $dsrid){
 
-        $order_insert = [];  $status_insert = [];  $plan_insert = [];
+        $plan_insert = [];       
 
-        $order_insert['customer_id'] = $input['customer_id'];
-        $order_insert['order_status_id'] = $input['order_status']; 
-        $order_insert['sales_priority'] = $input['sales_priority'];       
+        // first order for MOBILE  /FIXED            
+        foreach ($input['plandetails'] as $key => $arplan) { 
 
-        // first order for MOBILE  /FIXED      
-        $total = 0;
-        foreach ($input[$ikey] as $key => $arplan) { 
-
-            $total += $arplan->total;
             $plan_insert[] = [
-                            "order_id"   => 0,
+                            "dsr_id"     => $dsrid,
                             "price"      => $arplan->price,
-                            "plan"       => $arplan->plan,
-                            "plan_id"    => $arplan->planid,
+                            "plan"       => $arplan->plan,                           
                             "plan_type"  => $arplan->plan_type,    
                             "quantity"   => $arplan->qty,
-                            "total"      => $arplan->total,
-                            "phoneno"    => (isset($arplan->phoneno) && $arplan->phoneno)? $arplan->phoneno: '',
                             "created_at" => \Carbon\Carbon::now(), # new \Datetime()
                             "updated_at" => \Carbon\Carbon::now()  # new \Datetime()
                         ];   
         }
-        $order_insert['plan_type'] = $ikey;
-        $order_insert['total_amount'] = $total;
-
-        if(isset($input[$ikey.'_eclosing_date']) && $input[$ikey.'_eclosing_date'] != ''){            
-            $cdate = str_replace('/', '-', $input[$ikey.'_eclosing_date']);            
-            $order_insert['exp_closing_date'] = date("Y-m-d", strtotime($cdate)); 
-        }
-        if(isset($input[$ikey.'_erevenue']) && $input[$ikey.'_erevenue'] != ''){
-            $order_insert['exp_revenue'] = $input[$ikey.'_erevenue']; 
-        }
-
-
-        #### Order Insert
-        $order = Order::create($order_insert); 
-
-
-        #### Order Status History
-        $status_insert = [
-                    "order_id"        => $order->id,
-                    "order_status_id" => $input['order_status'],
-                    "comments"        => $input['comments'],
-                    "added_by"        => auth()->user()->id,
-                    "created_at"      => \Carbon\Carbon::now(), # new \Datetime()
-                    "updated_at"      => \Carbon\Carbon::now()  # new \Datetime()
-                    ];
-
-        DB::table('order_histories')->insert($status_insert);
-
-
+       
         #### Order Plans
-        foreach ($plan_insert as $pk => $plans) { 
-            $plan_insert[$pk]["order_id"]  = $order->id;
-        }
-
-        DB::table('order_plans')->insert($plan_insert);
+        DB::table('dsr_plans')->insert($plan_insert);
 
         return true;
     }
 
     // update fixed/mobile orders with plans and status
-    public function updateOrderPlan($input, $orderid){
+    public function updateDsrPlan($input, $dsrid){
 
-        $order_insert = [];  $status_insert = [];  $plan_insert = [];
+        $plan_insert = [];  
+       // dd($input['plandetails']);     
 
-        // second order for FIXED/MOBILE       1 
-        $total = 0;
-        foreach ($input['order_plan'] as $key => $arplan) {
+        // first order for MOBILE  /FIXED            
+        foreach ($input['plandetails'] as $key => $arplan) { 
             if(isset($arplan->isdelete) && $arplan->isdelete == 1){
                 //delete this plan
-                DB::table('order_plans')->where('id', $arplan->order_planid)->delete();
+                DB::table('dsr_plans')->where('id', $arplan->id)->delete();
                 continue;
             }
-
-            if(isset($arplan->order_planid) && $arplan->order_planid){
+            if(isset($arplan->id) && $arplan->id){
                 // edit existing plan
             }else{
+
                 $plan_insert[] = [
-                    "order_id"   => $orderid,
-                    "price"      => $arplan->price,
-                    "plan"       => $arplan->plan,
-                    "plan_id"    => $arplan->planid,
-                    "plan_type"  => $arplan->plan_type,    
-                    "quantity"   => $arplan->qty,
-                    "total"      => $arplan->total,
-                    "phoneno"    => (isset($arplan->phoneno) && $arplan->phoneno)? $arplan->phoneno: '',
-                    "created_at" => \Carbon\Carbon::now(), # new \Datetime()
-                    "updated_at" => \Carbon\Carbon::now()  # new \Datetime()
-                ];
-
-            }            
-            $total += $arplan->total;
-               
-        }        
-        #### Order Plans       
-        DB::table('order_plans')->insert($plan_insert);
-
-
-        #### Order Update   
-        $order = Order::find($orderid);
-        $old_order_status = $order->order_status_id;
-
-        $order_insert['total_amount'] = $total;
-        $order_insert['customer_id'] = $input['customer_id'];
-
-        if($old_order_status != $input['order_status']){
-            // current status not match with previous one
-            $order_insert['order_status_id'] = $input['order_status'];
-
-            #### Order Status History
-            $status_insert = [
-                        "order_id"        => $order->id,
-                        "order_status_id" => $input['order_status'],
-                        "comments"        => $input['comments'],
-                        "activity_no"     => $input['activity_no'],
-                        "added_by"        => auth()->user()->id,
-                        "created_at"      => \Carbon\Carbon::now(), # new \Datetime()
-                        "updated_at"      => \Carbon\Carbon::now()  # new \Datetime()
-                        ];
-
-            DB::table('order_histories')->insert($status_insert);
-
+                            "dsr_id"     => $dsrid,
+                            "price"      => $arplan->price,
+                            "plan"       => $arplan->plan,                           
+                            "plan_type"  => $arplan->plan_type,    
+                            "quantity"   => $arplan->qty,
+                            "created_at" => \Carbon\Carbon::now(), # new \Datetime()
+                            "updated_at" => \Carbon\Carbon::now()  # new \Datetime()
+                        ]; 
+            }  
         }
-        $ikey = $order->plan_type;
+       
+        #### Order Plans
+        DB::table('dsr_plans')->insert($plan_insert);
 
-        if(isset($input[$ikey.'_eclosing_date']) && $input[$ikey.'_eclosing_date'] != ''){            
-            $cdate = str_replace('/', '-', $input[$ikey.'_eclosing_date']);
-            $order_insert['exp_closing_date'] = date("Y-m-d", strtotime($cdate)); 
-        }
-        if(isset($input[$ikey.'_erevenue']) && $input[$ikey.'_erevenue'] != ''){
-            $order_insert['exp_revenue'] = $input[$ikey.'_erevenue']; 
-        }
-      
-        // Order Updation    
-        $res = $order->update($order_insert);
-
-        return $res;
+        return true;     
     }    
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-        $order = DB::table('orders AS or')            
-            ->join('customers AS ct', 'ct.id', '=', 'or.customer_id')
-            ->join('users AS us', 'us.id', '=', 'ct.refferedby')
-            ->select('us.fullname', 'ct.company_name', 'ct.account_no', 'ct.location','ct.authority_name','ct.authority_email','ct.authority_phone','ct.technical_name','ct.technical_email','ct.technical_phone',
-                'or.total_amount','or.created_at', 'or.id', 'or.plan_type', 'or.customer_id', 'or.order_status_id', 'or.activation_date', 'or.sales_priority','or.exp_revenue','or.exp_closing_date')         
-            ->where('or.id', $id)
-            ->first();
-
-        $documents = DB::table('customer_documents')->where('customer_id',$order->customer_id)->get()->pluck('document_path')->toArray();
-
-        $ord_plans = DB::table('order_plans AS op')
-                    ->select('op.price', 'op.plan', 'op.quantity', 'op.plan_type', 'op.total', 'op.phoneno')   
-                    ->where('op.order_id',$id)
-                    ->get();
-
-        $ord_history = DB::table('order_histories AS oh')
-                    ->orderBy('oh.id','DESC')
-                    ->join('order_statuses AS os', 'os.id', '=', 'oh.order_status_id')
-                    ->join('users AS us', 'us.id', '=', 'oh.added_by')
-                    ->select('os.name', 'oh.comments','oh.activity_no', 'oh.created_at','us.fullname')   
-                    ->where('oh.order_id',$id)
-                    ->get();
-        
-        $ordstatus = OrderStatus::orderBy('id','ASC')->get()
-                    ->pluck('name', 'id')->toArray();                    
-
-
-        return view('dsr.show',compact('order','documents', 'ord_plans', 'ord_history', 'ordstatus'));
-    }
-
-    // Change the order status
-    public function changeStatus(Request $request){
-        
-        $this->validate($request, [      
-            'orderid'   => 'required'    
-        ]); 
-
-        $input = $request->all();
-
-        // To open orders
-        $statusid = 1; // 
-        $update = [];
-        $order = Order::find($input['orderid']);
-        $update['order_status_id'] = $statusid;
-
-        $oldorderstatus = $order->order_status_id;
-        if($oldorderstatus != $statusid){
-            
-            #### Order Status History
-            $status_insert = [
-                        "order_id"        => $input['orderid'],
-                        "order_status_id" => $statusid,
-                        "comments"        => 'DSR is activated as an order',
-                        "activity_no"     => '',                    
-                        "added_by"        => auth()->user()->id,
-                        "created_at"      => \Carbon\Carbon::now(), # new \Datetime()
-                        "updated_at"      => \Carbon\Carbon::now()  # new \Datetime()
-                        ];
-
-            DB::table('order_histories')->insert($status_insert);
-        }
-
-        ## Update Order
-        $order->update($update);
-
-        return response()->json(['success'=>'DSR activated as an order successfully']);
-
-    }
 
     /**
      * Show the form for editing the specified resource.
@@ -463,41 +286,21 @@ class DsrController extends Controller
     public function edit($id)
     {
         //
-        $order = Order::find($id);
+        $dsrStatus = DsrStatus::orderBy('id','ASC')->get()
+                        ->pluck('name', 'id')->toArray();
 
-        $mob_prices = Pricing::orderBy('amount','ASC')->where('plan_type', 'mobile')->get()
-                    ->pluck('amount', 'id')->toArray();
+        $dsr = DB::table('dsrs as d')
+                    ->join('dsr_statuses AS ds', 'ds.id', '=', 'd.dsr_status')
+                    ->select('d.*', 'ds.name as status')
+                    ->where('d.id',$id)->first();
 
-        $fxd_prices = Pricing::orderBy('amount','ASC')->where('plan_type', 'fixed')->get()
-                    ->pluck('amount', 'id')->toArray();
-
-        $mob_plans = Plan::orderBy('plan','ASC')->where('plan_type', 'mobile')->get()
-                    ->pluck('plan', 'id')->toArray();
-
-        $fxd_plans = Plan::orderBy('plan','ASC')->where('plan_type', 'fixed')->get()
-                    ->pluck('plan', 'id')->toArray();
-
-        $users = User::all()->pluck('fullname', 'id')->toArray(); 
-
-        $customerList = Customer::all()->pluck('company_name', 'id')->toArray(); 
-
-        $customer = Customer::find($order->customer_id);
-
-        $documents = DB::table('customer_documents')->where('customer_id',$order->customer_id)->get()->pluck('document_path')->toArray();
-
-        $arplans = DB::table('order_plans')
-                    ->select('price', 'plan', 'plan_id','plan_type', 'quantity', 'total', 'id AS order_planid', 'phoneno')
-                    ->where('order_id',$id)->get();
+        $arplans = DB::table('dsr_plans')
+                    ->select('*')
+                    ->where('dsr_id',$id)->get();
         
-        $history = DB::table('order_histories AS oh')
-                    ->orderBy('oh.id','DESC')
-                    ->join('order_statuses AS os', 'os.id', '=', 'oh.order_status_id')
-                    ->join('users AS us', 'us.id', '=', 'oh.added_by')
-                    ->select('os.name', 'oh.comments', 'oh.activity_no', 'oh.order_status_id', 'oh.created_at', 'us.fullname')   
-                    ->where('oh.order_id',$id)
-                    ->get();
+     
     
-        return view('dsr.edit',compact('customer', 'users','order', 'documents', 'customerList', 'mob_prices', 'fxd_prices', 'mob_plans', 'fxd_plans',  'arplans', 'history'));
+        return view('dsr.edit',compact('dsrStatus', 'dsr', 'arplans'));
 
     }
 
@@ -510,66 +313,50 @@ class DsrController extends Controller
      */
     public function update(Request $request)
     {
-        
         $this->validate($request, [
-            'orderid'   => 'required',
-            'company_name' => 'required',
-           // 'account_no' => 'required',
-            'location' => 'required',
-            'authority_name' => 'required',          
-            'authority_phone' => 'required',
-            'technical_name' => 'required',
-            'technical_email' => 'required|email',
-            'technical_phone' => 'required',                
+            'dsrid'   => 'required',
+            'company' => 'required',
+        //    'contact_name' => 'required',          
+            'phone' => 'required',          
+          //  'email' => 'email', //required|
+            'remarks' => 'required',                
             'refferedby' => 'required',
-            //'image' => 'required',
-            'image.*' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048',
-            'order_status' => 'required',
-            'sales_priority' => 'required'
+            'dsr_status' => 'required'
         ]); 
 
         $input = $request->all();
+        $id = $input['dsrid'];
 
-        $id = $input['orderid'];
+        $dsrInsert = [
+            'company'       => $input['company'],
+            'location'      => $input['location'],
+            'contact_name'  => $input['contact_name'],        
+            'phone'         => $input['phone'],       
+            'email'         => $input['email'],
+            'remarks'       => $input['remarks'],      
+            'refferedby'    => $input['refferedby'],
+            'dsr_status'    => $input['dsr_status'],
+        ];
 
-        // For CUSTOMER
-        if(isset($input['customerid']) && $input['customerid'] !=0){
-            //update customer
-            $cid = $input['customerid'];
-            $this->validate($request, [
-               'authority_email' => 'required|email|unique:customers,authority_email,'.$cid,  
-                ]);
-            
-            // $exists = Customer::where('authority_email',$input['authority_email'])
-            //                 ->where('id', '<>' , $cid)
-            //                 ->count();
-            // if(!$exists)
-            $input['customer_id'] = app(CustomerController::class)->updateCustomer($input, $request, $cid);
-             
-        }else{
-           
-            // Create Customer
-            $this->validate($request, [
-                'authority_email' => 'required|email|unique:customers,authority_email'
-                ]);
-            $input['customer_id'] = app(CustomerController::class)->createCustomer($input, $request); 
-        }   
-
-        // For MOBILE ORDER
-        $mobile = json_decode($input['mobile']);
-        // For FIXED ORDER
-        $fixed = json_decode($input['fixed']);
-
-        if(!empty($mobile)){
-            $input['order_plan'] = $mobile;
-
-        }elseif(!empty($fixed)){
-            $input['order_plan'] = $fixed;
+        $dsrInsert = $input;
+        if(isset($input['reminder_date'])){
+            $dsrInsert['reminder_date'] = date("Y-m-d H:i:s", strtotime($input['reminder_date']));
         }
+        if(isset($input['expected_closing'])){
+            $dsrInsert['expected_closing'] = date("Y-m-d", strtotime($input['expected_closing']));
+        }
+        $dsr = Dsr::find($id);
+        $dsr->update($dsrInsert);
+         
+        $res_m = '';
+        // For MOBILE
+        $input['plandetails'] = json_decode($input['plandetails']); 
+        if(isset($input['plandetails']) && !empty($input['plandetails']) ){               
 
-        $res = $this->updateOrderPlan($input, $id);
+            $res_m = $this->updateDsrPlan($input, $id);
+        }
         
-        if($res){
+        if($dsr || $res_m){
             return response()->json(['success'=>'You have successfully updated an order.']);
         }
         
@@ -586,13 +373,10 @@ class DsrController extends Controller
     {
 
         // Order Plans
-        DB::table('order_plans')->where('order_id',$id)->delete();
-
-        // Order Status history
-        DB::table('order_histories')->where('order_id',$id)->delete();
+        DB::table('dsr_plans')->where('dsr_id',$id)->delete();
 
         // Order
-        Order::find($id)->delete(); 
+        Dsr::find($id)->delete(); 
 
         return redirect()->route('dsr.index')
                         ->with('success','DSR deleted successfully');

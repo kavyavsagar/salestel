@@ -31,6 +31,7 @@ Route::group(['middleware' => ['auth']], function() {
     Route::resource('customer','CustomerController');
     Route::resource('order','OrderController');
     Route::resource('complaint','ComplaintController');
+    Route::resource('task','TaskController');
     
     Route::get('/ajxcustomer/{id}', 'CustomerController@getCustomer')->name('ajxcustomer');
     Route::post('order/changestatus', 'OrderController@changeStatus')->name('order.changestatus');
@@ -40,11 +41,17 @@ Route::group(['middleware' => ['auth']], function() {
     Route::get('/orderexport', 'OrderController@exportCSV')->name('order.exportcsv');
     Route::get('/updateplan', 'OrderController@updatePlan')->name('order.updateplan');
     Route::post('/saveplan', 'OrderController@savePlan')->name('order.saveplan');
-    
+    Route::get('/complaintsolved', 'ComplaintController@solved')->name('complaint.solved');
+    Route::get('/complaintexport', 'ComplaintController@exportCSV')->name('complaint.exportcsv');
+
+    Route::get('/taskcompleted', 'TaskController@completed')->name('task.completed');
+    Route::post('task/changestatus', 'TaskController@changeStatus')->name('task.changestatus');
+    Route::post('order/updatephone', 'OrderController@updatePhone')->name('order.updatephone');
 
     Route::resource('dsr','DsrController');
     Route::get('/dsrexport', 'DsrController@exportCSV')->name('dsr.exportcsv');
-    Route::post('/updateDsr', 'DsrController@update')->name('dsr.updateOrder');
+    Route::get('/dsrexport', 'DsrController@exportCSV')->name('dsr.exportcsv');
+    Route::post('/updateDsr', 'DsrController@update')->name('dsr.updateDsr');
     Route::post('/activateDsr', 'DsrController@changeStatus')->name('dsr.changestatus');
 
     Route::get('/customerimport', 'CustomerController@importView')->name('customer.importview');
@@ -55,7 +62,9 @@ Route::group(['middleware' => ['auth']], function() {
     Route::post('/fetchcustomer', 'CustomerController@fetchCustomer')->name('customer.fetch');
 
     Route::get('/createmeeting', 'MeetingController@index')->name('meeting.index');
-    Route::post('/meeting/host', 'MeetingController@host')->name('meeting.host');    
+    Route::post('/meeting/host', 'MeetingController@host')->name('meeting.host');  
+
+    Route::get('/agentdata', 'HomeController@usersTotalAmount')->name('agentdata');  
 });
 
 Route::get('/meeting/{id}', 'MeetingController@start')->name('meeting.start');

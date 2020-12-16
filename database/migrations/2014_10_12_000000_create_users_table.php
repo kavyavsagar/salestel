@@ -23,6 +23,7 @@ class CreateUsersTable extends Migration
             $table->string('title')->nullable();
             $table->integer('parentid')->default(0);
             $table->rememberToken();
+            $table->integer('goal')->default(0);
             $table->timestamps();
             $table->tinyInteger('status')->default(1);
         });

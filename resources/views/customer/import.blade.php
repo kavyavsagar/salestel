@@ -86,7 +86,7 @@
     </div>    
     </div>
  @hasanyrole('Admin')
-    <div class="row" style="display: none;">
+    <div class="row d-none">
         <!-- left column -->
      
       <div class="col">

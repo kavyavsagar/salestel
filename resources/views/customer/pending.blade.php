@@ -28,9 +28,9 @@
         <div class="card">
         <div class="card-header">
           <h3 class="card-title">Pending Customer Management</h3>
-          @can('customer-create')
+         <!--  @can('customer-create')
             <a class="btn bg-gradient-success btn-sm float-right" href="{{ route('customer.create') }}">CREATE NEW</a>
-          @endcan
+          @endcan -->
         </div>
         <!-- /.card-header -->
         <div class="card-body">

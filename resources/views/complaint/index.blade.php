@@ -29,6 +29,10 @@
           @can('complaint-create')
             <a class="btn bg-gradient-success btn-sm float-right" href="{{ route('complaint.create') }}">CREATE NEW</a>
           @endcan
+          @hasanyrole('Coordinator|Admin')
+            <a class="btn bg-gradient-warning btn-sm float-right mr-2" href="{{ route('complaint.exportcsv') }}">EXPORT ALL</a>
+          @endhasanyrole
+          
         </div>
         <!-- /.card-header -->
         <div class="card-body">
@@ -40,7 +44,7 @@
           <table id="complaint-tbl" class="table table-bordered table-hover">
             <thead>
             <tr>
-              <th>#</th>
+              <th>RefNo:</th>
               <th>Account No.</th>
               <th>Priority</th>
               <th>Reported By</th>
@@ -50,9 +54,12 @@
             </tr>
             </thead>
             <tbody> 
-            @foreach ($data as $complaint)              
+            @foreach ($data as $complaint)   
+              @php
+                $time = strtotime($complaint->created_at) + 60*60*4;
+              @endphp           
             <tr>
-              <td>{{ $complaint->id }}</td>
+              <td> {{$complaint->comp_no? $complaint->comp_no: '--'}}</td>
               <td>{{ $complaint->customer_acc_no }}</td>
               <td>@switch($complaint->priority)
                   @case('high')
@@ -67,15 +74,16 @@
               </td>
               <td>{{ $complaint->fullname }}</td>
               <td>{{ ucwords($complaint->status_name) }}</td>
-              <td>{{ date("d-m-Y", strtotime($complaint->created_at)) }}</td>
+              <td>{{ date("d-m-Y H:i:s", $time) }}</td>
               <td>
                 <a class="btn" href="{{ route('complaint.show',$complaint->id) }}" title="View Complaint"><i class="fas fa-eye"></i></a>
+               
                 @can('complaint-edit')
                  <a class="btn" href="{{ route('complaint.edit',$complaint->id) }}" title="Edit"><i class="fas fa-edit"></i></a>
                 @endcan                 
                 @can('complaint-delete')
                    {!! Form::open(['method' => 'DELETE','route' => ['complaint.destroy', $complaint->id],'style'=>'display:inline']) !!}
-                  <button type="submit" class="btn" title="Delete"><i class="fas fa-trash"></i></button>
+                  <button type="submit" class="btn" title="Delete" onclick="return confirmDel('{{ $complaint->customer_acc_no }}' );"><i class="fas fa-trash"></i></button>
                   {!! Form::close() !!}
                 @endcan
               </td>
@@ -84,7 +92,7 @@
             </tbody>
             <tfoot>
             <tr>
-              <th>#</th>
+              <th>RefNo:</th>
               <th>Account No.</th>
               <th>Priority</th>
               <th>Reported By</th>
@@ -95,7 +103,7 @@
             </tr>
             </tfoot>
           </table>
-          <div class="float-right"> {!! $data->render() !!}</div>
+         
         </div>
         <!-- /.card-body -->
         </div>
@@ -106,4 +114,14 @@
   </div>
 </section> 
 <!-- /.content -->
+
+<script type="text/javascript">
+function confirmDel(name){
+  if(confirm('Are you sure to delete the complaint of '+name+' ?')){
+    return true;
+  }else{
+    return false;
+  }
+}
+</script>
 @endsection

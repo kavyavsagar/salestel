@@ -7,6 +7,7 @@ use App\User;
 use Illuminate\Http\Request;
 use Redirect;
 use DB;
+use Illuminate\Support\Arr;
 use Validator,Response,File;
 use App\Imports\CustomerImport;
 use App\Imports\RetentionImport;
@@ -36,18 +37,7 @@ class CustomerController extends Controller
      */
     public function index(Request $request)
     {
-        $Team = [];
-        
-        array_push($Team, auth()->user()->id);
-
-        if(auth()->user()->hasRole('Team Lead')){
-            $tusers =  User::where('parentid', '=', auth()->user()->id)
-                    ->get()
-                    ->pluck('id')->toArray();
-
-            array_push($Team, $tusers);
-        }
-
+        $Team = $this->getTeams();
 
         $query = DB::table('customers')
             ->join('users', 'users.id', '=', 'customers.refferedby')
@@ -63,8 +53,7 @@ class CustomerController extends Controller
         return view('customer.index',compact('data'));
     }
 
-    public function pending(Request $request)
-    {
+    public function getTeams(){
         $Team = [];
         
         array_push($Team, auth()->user()->id);
@@ -77,6 +66,12 @@ class CustomerController extends Controller
             array_push($Team, $tusers);
         }
 
+        return $Team;
+    }
+
+    public function pending(Request $request)
+    {
+        $Team = $this->getTeams();
 
         $query = DB::table('customers')
             ->join('users', 'users.id', '=', 'customers.refferedby')
@@ -125,7 +120,7 @@ class CustomerController extends Controller
             'technical_phone' => 'required',                
             'refferedby' => 'required',
             //'image' => 'required',
-            'image.*' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048'         
+            'image.*' => 'mimes:jpeg,png,jpg,bmp,pdf',        
         ]); 
         
         $input = $request->all();        
@@ -232,13 +227,25 @@ class CustomerController extends Controller
         if($request->get('query') && strlen($request->get('query')) >2)
         {
             $query = $request->get('query');
-            $data = DB::table('customers')
-                    ->where('account_no', 'LIKE', "%{$query}%")
-                    ->orWhere('company_name', 'LIKE', "%{$query}%")
-                    ->get();
+
+            $data = DB::table('customers');
+
+            if(auth()->user()->hasAnyRole(['Agent', 'Team Lead'])){  
+                $Team = $this->getTeams();
+                $final = Arr::flatten($Team);
+                //$data->whereIn('refferedby', $final);
+            }
+
+            $data->where(function ($sql) use ($query) {
+                $sql->orWhere('account_no', 'LIKE', "{$query}")
+                    ->orWhere('company_name', 'LIKE', "{$query}")
+                    ->orWhere('authority_phone', 'LIKE', "{$query}");        
+            });
+
+            $customer = $data->get();
 
             $output = '<ul class="list-group auto-comp">';
-            foreach($data as $row)
+            foreach($customer as $row)
             {
                $output .= '<li class="list-group-item">'.$row->company_name.' <b>|</b> <span class="text-info">'.$row->account_no.'</span></li>';
             }
@@ -287,7 +294,7 @@ class CustomerController extends Controller
             'technical_phone' => 'required',                
             'refferedby' => 'required',
             //'image' => 'required',
-            'image.*' => 'file|image|mimes:jpeg,png,jpg,bmp,pdf|max:2048' 
+            'image.*' => 'mimes:jpeg,png,jpg,bmp,pdf', 
         ]);
 
         // $exists = Customer::where('authority_email',$input['authority_email'])
@@ -507,9 +514,28 @@ class CustomerController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($id, Request $request)
     {
-        
+        $input = $request->all();      
+        $msg = '';
+        if(isset($input['doc_del']) && $input['doc_del']){
+            // document delete only
+
+            $this->document_del($id);
+            $msg = 'Documents deleted successfully';
+        }else{
+            // document 
+            $this->document_del($id);
+            Customer::find($id)->delete(); 
+            $msg = 'Customer deleted successfully';
+        }
+
+        return redirect()->route('customer.index')
+                        ->with('success',$msg);
+    }
+
+    public function document_del($id){
+
         $docqry = DB::table('customer_documents')->where('customer_id',$id);
         $docObj = $docqry->get();
 
@@ -519,15 +545,13 @@ class CustomerController extends Controller
             $image_path = $destinationPath.$doc->document_path;
 
             if(File::exists($image_path)) {
-                File::delete($image_path);
+               File::delete($image_path);
             }
         }    
-
         $docqry->delete();
 
-        Customer::find($id)->delete(); 
-
-        return redirect()->route('customer.index')
-                        ->with('success','Customer deleted successfully');
+        return true;
     }
+
+
 }

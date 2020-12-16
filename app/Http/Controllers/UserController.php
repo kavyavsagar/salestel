@@ -35,10 +35,11 @@ class UserController extends Controller
         if(auth()->user()->hasRole('Team Lead')){ 
             $data =  User::where('id', '=', auth()->user()->id)
                     ->orWhere('parentid','=', auth()->user()->id)
+                    ->where('status', '=', 1)
                     ->orderBy('id','DESC')
                     ->get();
         }else{
-            $data = User::orderBy('id','DESC')->where('id', '<>', '1')->get();
+            $data = User::orderBy('id','DESC')->where('id', '<>', '1')->where('status', '=', 1)->get();
         }
         
         return view('users.index',compact('data'));
@@ -52,7 +53,12 @@ class UserController extends Controller
     public function create()
     {   
         //$parents = User::pluck('fullname','fullname')->all();
-        $parents = User::all()->pluck('fullname', 'id')->toArray();
+        
+        if(auth()->user()->hasRole('Admin')){ 
+            $parents = User::where('parentid', '=', '0')->pluck('fullname', 'id')->toArray();
+        }else{
+            $parents = User::where('id', '<>', '1')->where('parentid', '=', '0')->pluck('fullname', 'id')->toArray();
+        }
 
         if(auth()->user()->hasRole('Admin')){ 
             $roles = Role::pluck('name','name')->all();
@@ -75,7 +81,8 @@ class UserController extends Controller
             'fullname' => 'required',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|same:confirm-password',
-            'phone' => 'required',           
+            'phone' => 'required',
+            'goal'  => 'required',           
             'roles' => 'required'
         ]);
     
@@ -138,7 +145,8 @@ class UserController extends Controller
             'fullname' => 'required',
             'email' => 'required|email|unique:users,email,'.$id,
             'password' => 'same:confirm-password',
-            //'roles' => 'required'
+            //'roles' => 'required',
+            'goal'  => 'required', 
         ]);
     
         $input = $request->all();

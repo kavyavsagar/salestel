@@ -75,16 +75,22 @@
                 </div>
             </div>
             <div class="row"> 
-                <div class="col-xs-12 col-sm-6 col-md-6">
+                <div class="col-xs-12 col-sm-4 col-md-4">
                     <div class="form-group">
                         <label>Mobile No:</label>
                         {!! Form::text('phone', null, array('placeholder' => 'Mobile No','class' => 'form-control')) !!}
                     </div>
                 </div>
-                <div class="col-xs-12 col-sm-6 col-md-6">
+                <div class="col-xs-12 col-sm-4 col-md-4">
                     <div class="form-group">
                         <label>Title:</label>
                         {!! Form::text('title', null, array('placeholder' => 'Designation','class' => 'form-control')) !!}
+                    </div>
+                </div>
+                 <div class="col-xs-12 col-sm-4 col-md-4">
+                    <div class="form-group">
+                        <label>Goal:</label>
+                        {!! Form::text('goal', null, array('placeholder' => 'Monthly Target','class' => 'form-control')) !!}
                     </div>
                 </div>
             </div>

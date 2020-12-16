@@ -15,6 +15,6 @@ class Order extends Model
      * @var array
      */
     protected $fillable = [
-        'customer_id', 'plan_type','total_amount','order_status_id', 'activation_date' , 'sales_priority', 'exp_closing_date','exp_revenue'       
+        'customer_id', 'user_id','plan_type','total_amount','order_status_id', 'activation_date' , 'partial_amount'    
     ];
 }

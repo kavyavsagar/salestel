@@ -161,7 +161,14 @@
                 <div class="col-xs-12 col-sm-12 col-md-12">
                     @foreach ($documents as $key => $doc)
                     <div id="{{$key}}" class="d-inline">    
-                       <img src="{{asset($doc)}}" class="img-fluid img-thumbnail m-1 mht-100">
+                        @php
+                        $file_parts = pathinfo($doc);
+                        @endphp
+                        @if($file_parts['extension'] == 'pdf')
+                          <a href="{{asset($doc)}}" download>{{ explode("/",$doc)[1] }}</a><br/>
+                        @else
+                           <a href="{{asset($doc)}}" download><img src="{{asset($doc)}}" class="img-fluid img-thumbnail m-1 mht-100"></a>
+                        @endif
                     </div>
                     @endforeach 
                 </div>

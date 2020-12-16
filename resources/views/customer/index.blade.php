@@ -28,9 +28,9 @@
         <div class="card">
         <div class="card-header">
           <h3 class="card-title">Master List Management</h3>
-          @can('customer-create')
+         <!--  @can('customer-create')
             <a class="btn bg-gradient-success btn-sm float-right" href="{{ route('customer.create') }}">CREATE NEW</a>
-          @endcan
+          @endcan -->
         </div>
         <!-- /.card-header -->
         <div class="card-body">
@@ -67,7 +67,7 @@
                 @endcan                 
                 @can('customer-delete')
                    {!! Form::open(['method' => 'DELETE','route' => ['customer.destroy', $customer->id],'style'=>'display:inline']) !!}
-                  <button type="submit" class="btn" title="Delete"><i class="fas fa-trash"></i></button>
+                  <button type="submit" class="btn" title="Delete" onclick="return confirmDel('{{ $customer->company_name }}' );"><i class="fas fa-trash"></i></button>
                   {!! Form::close() !!}
                 @endcan
               </td>
@@ -96,6 +96,14 @@
   </div>
 </section> 
 <!-- /.content -->
-
+<script type="text/javascript">
+function confirmDel(name){
+  if(confirm('Are you sure to delete the customer '+name+' ?')){
+    return true;
+  }else{
+    return false;
+  }
+}
+</script>
 
 @endsection

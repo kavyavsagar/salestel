@@ -53,7 +53,8 @@
                 </div> 
                 <div class="form-group">
                     <label for="complaint">Complaint</label>
-                    {!! Form::textarea('description', null, ['placeholder' => 'Complaint Description','class' => 'form-control','id' => 'complaint', 'rows' => 4, 'cols' => 54]) !!}
+                   
+                   {!! Form::textarea('description', null, ['placeholder' => 'Complaint Description','class' => 'form-control','id' => 'complaint', 'rows' => 4, 'cols' => 54]) !!}
                 </div> 
                 <div class="form-group">
                     <label for="priority">Priority</label>
@@ -63,7 +64,8 @@
                         <option value="high">High</option>    
                     </select>
                 </div> 
-                @hasanyrole('Coordinator|Admin')
+                @hasanyrole('Coordinator|Admin|Team Lead')
+              
                 <div class="form-group">
                     <label>Reffered By:</label>
                     <select class="form-control" name="reported_by">   
@@ -74,7 +76,7 @@
                         </option>
                       @endforeach    
                     </select>                    
-                </div>   
+                </div>  
                 @else
                   <input type="hidden" name="reported_by" value="{{Auth::id()}}">
                 @endhasanyrole            
@@ -82,7 +84,7 @@
                     <label>Upload all documents:</label>
                     <div class="input-group">
                         <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="file-input" name="filepath" accept="image/jpeg,image/jpg,image/png,image/bmp,application/pdf" />
+                            <input type="file" class="custom-file-input" id="file-input" name="filedoc[]" accept="image/jpeg,image/jpg,image/png,image/bmp,application/pdf" multiple/>
                             <label class="custom-file-label" for="file-input">Choose file</label>
                         </div>
                         <div class="input-group-append">
@@ -91,11 +93,11 @@
                     </div>
                     <p class="small text-muted mt-1">documents should be in this formats (jpeg, png, jpg, bmp, pdf)</p>
                     <div id="file-error" class="text-danger mt-1"></div>
-                    <span class="text-danger">{{ $errors->first('filepath') }}</span>           
+                    <span class="text-danger">{{ $errors->first('filedoc') }}</span>           
                 </div>
                 <div class="form-group">
                      <div id="thumb-output"></div>
-                </div>
+                </div>    
             </div>
             <!-- /.card-body -->
             <div class="card-footer">
@@ -113,40 +115,55 @@
 
 <script type="text/javascript"> 
 $(document).ready(function(){
+
+
  $('#file-input').on('change', function(){ //on file input change
     if (window.File && window.FileReader && window.FileList && window.Blob) //check File API supported browser
     {
         var data = $(this)[0].files; //this file data
          
         $.each(data, function(index, file){ //loop though each file
-            if(/(\.|\/)(gif|jpe?g|png)$/i.test(file.type)){ //check supported file type
-                var fRead = new FileReader(); //new filereader
-                fRead.onload = (function(file){ //trigger function on successful read
-                return function(e) {
-                    var img = $('<img/>').addClass('img-fluid img-thumbnail m-1 mht-100').attr('src', e.target.result); //create image element 
-                    $('#thumb-output').html(img); //append image to output element
-                };
-                })(file);
-                fRead.readAsDataURL(file); //URL representing the file's data.
-                $('#file-error').html("");
-            }else{              
-                $('#file-error').html("Selected file extension not allowed");
-                return;
-            };
-        });
+
+                if(/(\.|\/)(bmp|jpe?g|png)$/i.test(file.type) || file.type.match('application/pdf')){ 
+                //check supported file type
+                    var fRead = new FileReader(); //new filereader
+                    fRead.onload = (function(file){ //trigger function on successful read
+                        return function(e) {                           
+                            let preview = '';
+                            if(file.type.match('application/pdf') ){
+                                preview = $('<p id="row-'+index+'"/>').addClass('text-danger m-1').html(file.name+'<button  type="button" class="btn btn-danger btn-del">Remove</button>');
+                            }else{
+                                preview = $('<img/>').addClass('img-fluid img-thumbnail m-1 mht-100').attr('src', e.target.result); //create image element 
+                            }
+                            
+                            $('#thumb-output').append(preview); //append image to output element
+                        };
+                    })(file);
+                    fRead.readAsDataURL(file); //URL representing the file's data.
+                    $('#file-error').html("");
+                }else{                        
+                    $('#file-error').html("Selected file extension not allowed");
+                    return;
+                }; 
+            });
          
     }else{
         alert("Your browser doesn't support File API!"); //if File API is absent
     }
+ 
  });
+ function fileExt(filename){
+    return filename.split('.').pop();
+ }
  /*************************  ********************************/
-  $.ajaxSetup({
+    $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
     });
-    $('#customerext').keyup(function(){ 
-        var query = $(this).val();
+
+    var fnajx = function(value){ 
+        var query = value;
         if(query != '')
         {
         // var _token = $('input[name="_token"]').val();
@@ -160,14 +177,32 @@ $(document).ready(function(){
             }
         });
         }
+    };
+    $( "#customerext" ).on({
+        keyup: function() {
+            console.log( "keyup over a div" );
+            let v = $(this).val();
+            fnajx(v);
+        },
+        paste: function(e) {
+            console.log( "paste left a div" );
+            var clipboardData = e.clipboardData || e.originalEvent.clipboardData || window.clipboardData;
+            var pastedData = clipboardData.getData('text');
+            fnajx(pastedData);
+        }
     });
 
     $(document).on('click', '#companyList > ul > li', function(){  
         let str = $(this).text();
+
         $('#customerext').val(str);        
         $('#companyList').fadeOut();        
 
     }); 
+
+    
+      // Summernote
+    $('.textarea').summernote();
 }); 
 </script>
 @endsection

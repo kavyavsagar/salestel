@@ -44,22 +44,24 @@
             <ul class="nav nav-treeview">
               <li class="nav-item">
                 <a href="{{ route('customer.index') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                  <i class="far fa-circle nav-icon text-danger"></i>
                   <p>Master List</p>
                 </a>
               </li>
-              <li class="nav-item">
+             <!--  <li class="nav-item">
                 <a href="{{ route('customer.pending') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Pending Customers</p>
                 </a>
-              </li>
+              </li> -->
+              @hasanyrole('Coordinator')             
               <li class="nav-item">
                 <a href="{{ route('customer.create') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                  <i class="far fa-circle nav-icon text-success"></i>
                   <p>Create New</p>
                 </a>
-              </li>           
+              </li> 
+              @endhasanyrole           
             </ul>
           </li>
           @endcan 
@@ -75,19 +77,19 @@
             <ul class="nav nav-treeview">
               <li class="nav-item">
                 <a href="{{ route('order.index') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>All Orders</p>
+                  <i class="far fa-circle nav-icon text-primary"></i>
+                  <p>Pending Orders</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ route('order.complete') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                  <i class="far fa-circle nav-icon text-warning"></i>
                   <p>Completed Orders</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ route('order.create') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
+                  <i class="far fa-circle nav-icon  text-success"></i>
                   <p>Create New</p>
                 </a>
               </li>            
@@ -175,41 +177,95 @@
             </a>
           </li>
           @endcan
-          @can('complaint-list')
-          <li class="nav-item">
-            <a href="{{ route('complaint.index') }}" class="nav-link">
+          @can('complaint-list')          
+          <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
               <i class="nav-icon fas fa-comment-dots"></i>
               <p>
                 Complaints
+                <i class="right fas fa-angle-left"></i>
               </p>
             </a>
+             <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ route('complaint.index') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon text-primary"></i>
+                  <p>Pending Complaints</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ route('complaint.solved') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon text-warning"></i>
+                  <p>Solved</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ route('complaint.create') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon  text-success"></i>
+                  <p>Create New</p>
+                </a>
+              </li>            
+            </ul>
           </li> 
-          @endcan
-          @hasanyrole('Coordinator|Admin')
+          @endcan     
+          @can('task-list')          
+          <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-th-list"></i>
+              <p>
+                Tasks
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+             <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ route('task.index') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon text-danger"></i>
+                  <p>Todo List</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ route('task.completed') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon text-warning"></i>
+                  <p>Completed Tasks</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ route('task.create') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon  text-success"></i>
+                  <p>Create New</p>
+                </a>
+              </li>            
+            </ul>
+          </li> 
+          @endcan  
+          @hasanyrole('Admin')       
           <li class="nav-item has-treeview" id="order-mu">
             <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-video"></i>
+              <i class="fas fa-user-tag"></i>
               <p>
-                Meetings
+                Roles
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
             <ul class="nav nav-treeview">
+            
               <li class="nav-item">
-                <a href="{{ route('meeting.index') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Host a Meeting</p>
+                <a href="{{ route('roles.index') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon text-danger"></i>
+                  <p>Role</p>
                 </a>
               </li>
+            
               <li class="nav-item">
-                <a href="{{ route('meeting.join') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Join a Meeting</p>
+                <a href="{{ route('roles.create') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon text-warning"></i>
+                  <p>Create Roles</p>
                 </a>
               </li>                   
             </ul>
-          </li>
-          @endhasanyrole   
+          </li>   
+           @endhasanyrole         
           <li class="nav-item">
             <a href="{{ route('cache.clear') }}" class="nav-link">
               <i class="nav-icon fas fa-broom"></i> 

@@ -15,6 +15,6 @@ class OrderHistory extends Model
      * @var array
      */
     protected $fillable = [
-        'order_id', 'order_status_id', 'comments' , 'added_by'     
+        'order_id', 'order_status_id', 'comments' , 'added_by', 'last_amount', 'last_act_date'
     ];
 }

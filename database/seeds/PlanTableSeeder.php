@@ -33,9 +33,9 @@ class PlanTableSeeder extends Seeder
         $planlist = [
           'Business Complete 80mbps',
           'Business Complete 175mbps',
-	      'Business Complete 275mbps',
-	      'Business Complete 500mbps',
-	      'Business Complete 1208mbps',
+          'Business Complete 275mbps',
+          'Business Complete 500mbps',
+          'Business Complete 1208mbps',
           'Business Essential 80mbps',
           'Business Essential 120mbps',
           'Business Essential 175mbps',

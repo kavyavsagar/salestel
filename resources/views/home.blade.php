@@ -23,13 +23,28 @@
   <div class="container-fluid">
     <!-- Small boxes (Stat box) -->
     <div class="row">
-      <div class="col-lg-3 col-6">
+      <div class="col-lg-2 col-12">
         <!-- small box -->
         <div class="small-box bg-info">
-          <div class="inner">
-            <h3>{{$neworders}}</h3>
-
-            <p>New Orders</p>
+          <div class="inner revenue">
+            <div class="row"> 
+              <div class="col-lg-6 col-md-6 col-12">
+                <p class="text-warning">Last Month</p>
+              </div>
+              <div class="col-lg-6 col-md-6 col-12">
+                <h4>{{$neworders['new_last']}}</h4>               
+              </div>
+            </div>
+            <hr>
+            <div class="row"> 
+              <div class="col-lg-6 col-md-6 col-12">
+                <p >This Month</p>
+              </div>
+              <div class="col-lg-6 col-md-6 col-12">
+                <h4>{{$neworders['new_this']}}</h4>
+                <small> Total Orders</small>
+              </div>
+            </div>
           </div>
           <div class="icon">
             <i class="ion ion-bag"></i>
@@ -38,12 +53,41 @@
         </div>
       </div>
       <!-- ./col -->
-      <div class="col-lg-3 col-6">
+      <div class="col-lg-6 col-12">
         <!-- small box -->
         <div class="small-box bg-success">
-          <div class="inner">
-            <h3>{{$comporders['total']}} <sup style="font-size: 20px">AED</sup> | {{$comporders['count']}}</h3>
-            <p>Total Revenue</p>
+          <div class="inner revenue">
+            <div class="row"> 
+              <div class="col-lg-2 col-md-2 col-12"><p class="text-warning">Last Month</p></div>
+              <div class="col-lg-4 col-md-4 col-12">
+                <h4 class="text-dark"><span title="{{$comporders['totalCnt'][0]}}">{{$comporders['totalAmt'][0]}} <sup style="font-size: 20px">AED</sup> | {{$comporders['totalCnt'][0]}}</span></h4>
+      <!--           <p class="text-dark">Pending</p> -->
+              </div>
+              <div class="col-lg-4 col-md-4 col-12">
+               <!--  <h4><span title="{{$comporders['completedCnt'][0]}}" >{{$comporders['completedAmt'][0]}} <sup style="font-size: 20px;">AED</sup> | {{$comporders['completedCnt'][0]}} </span></h4> -->
+                <!--  <p>Completed</p> -->
+              </div>
+              <div class="col-lg-2 col-md-2 col-12">
+                <h4 class="text-danger"><span title="{{$comporders['rejectedCnt'][0]}}" >{{$comporders['rejectedAmt'][0]}} <sup style="font-size: 20px;">AED</sup> | {{$comporders['rejectedCnt'][0]}} </span></h4>
+ <!--                <p class="text-danger">Rejected</p> -->
+              </div>
+            </div>
+            <hr/>
+             <div class="row"> 
+              <div class="col-lg-2 col-md-2 col-12"><p class="text-white">This Month</p></div>
+              <div class="col-lg-4 col-md-4 col-12">
+                <h4 class="text-dark"><span title="{{$comporders['totalCnt'][1]}}">{{$comporders['totalAmt'][1]}} <sup style="font-size: 20px">AED</sup> | {{$comporders['totalCnt'][1]}}</span></h4>
+                <small class="text-dark">Pending</small>
+              </div>
+              <div class="col-lg-4 col-md-4 col-12">
+                <h4><span title="{{$comporders['completedCnt'][1]}}" >{{$comporders['completedAmt'][1]}} <sup style="font-size: 20px;">AED</sup> | {{$comporders['completedCnt'][1]}} </span></h4>
+                 <small class="text-white">Completed</small>
+              </div>
+              <div class="col-lg-2 col-md-2 col-12">
+                <h4 class="text-danger"><span title="{{$comporders['rejectedCnt'][1]}}" >{{$comporders['rejectedAmt'][1]}} <sup style="font-size: 20px;">AED</sup> | {{$comporders['rejectedCnt'][1]}} </span></h4>
+                <small class="text-danger">Rejected</small>
+              </div>
+            </div>
           </div>
           <div class="icon">
             <i class="ion ion-stats-bars"></i>
@@ -52,7 +96,7 @@
         </div>
       </div>
       <!-- ./col -->
-      <div class="col-lg-3 col-6">
+      <div class="col-lg-2 col-6">
         <!-- small box -->
         <div class="small-box bg-warning">
           <div class="inner">
@@ -67,7 +111,7 @@
         </div>
       </div>
       <!-- ./col -->
-      <div class="col-lg-3 col-6">
+      <div class="col-lg-2 col-6">
         <!-- small box -->
         <div class="small-box bg-danger">
           <div class="inner">
@@ -84,213 +128,351 @@
       <!-- ./col -->
     </div>
     <!-- /.row -->
+    @hasanyrole('Coordinator|Admin|Team Lead')
     <div class="row">         
       <div class="col-md-12">
         <!-- AREA CHART -->
-    <!--     <div class="card card-primary">
-          <div class="card-header">
-            <h3 class="card-title">Sales Report</h3>
+            <div class="card card-primary">
+              <div class="card-header border-0">
+                <div class="d-flex justify-content-between">
+                  <h3 class="card-title">Agent Sales</h3>
+                  <a href="{{route('order.index')}}">View Report</a>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="d-flex">
+                  <p class="d-flex flex-column">
+                    <span class="text-bold text-lg">AED 22,000.00</span>
+                    <span>Sales Over The Time</span>
+                  </p>
+                  <p class="ml-auto d-flex flex-column text-right">
+                    <span class="text-success">
+                      <i class="fas fa-arrow-up"></i> 
+                    </span>
+                    <span class="text-muted">Current month</span>
+                  </p>
+                </div>
+                <!-- /.d-flex -->
 
-            <div class="card-tools">
-              <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
-              </button>
-              <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
-            </div>
-          </div>
-          <div class="card-body">
-            <div class="chart">
-              <canvas id="areaChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-            </div>
-          </div> -->
-          <!-- /.card-body -->
-       <!--  </div> -->
-        <!-- /.card -->
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-lg-6 col-6">
-          <!-- DONUT CHART -->
-          <div class="card card-success">
-            <div class="card-header">
-              <h3 class="card-title">Orders Progress</h3>
+                <div class="position-relative mb-4">
+                  <canvas id="sales-chart" height="200"></canvas>
+                </div>
 
-              <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
-                </button>
-                <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+                <div class="d-flex flex-row justify-content-end">
+                  <span class="mr-2">
+                    <i class="fas fa-square text-primary"></i> Completed
+                  </span>
+
+                  <span>
+                    <i class="fas fa-square text-danger"></i> Pending
+                  </span>
+                </div>
               </div>
             </div>
-            <div class="card-body">
-              <input type="hidden" id="newordst" value="{{$neworders}}">
-              <input type="hidden" id="leadsordst" value="{{$leads}}">
-              <input type="hidden" id="duordst" value="{{$duapprove}}">
-              <input type="hidden" id="createordst" value="{{$createdords}}">
-              <input type="hidden" id="deliveryordst" value="{{$deliveryords}}">
-              <input type="hidden" id="compordst" value="{{$comporders['count']}}">
+            <!-- /.card -->
 
-              <canvas id="donutChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+      </div>
+    </div>
+    @endhasanyrole
+
+    @hasanyrole('Coordinator|Admin')
+    <div class="row">         
+      <div class="col-md-12">
+        <!-- AREA CHART -->
+            <div class="card card-warning">
+              <div class="card-header border-0">
+                <div class="d-flex justify-content-between">
+                  <h3 class="card-title">Team Sales</h3>
+                  <a href="{{route('order.index')}}">View Report</a>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="d-flex">
+                  <p class="d-flex flex-column">
+                    <span class="text-bold text-lg">AED 35,000.00</span>
+                    <span>Sales Over The Time</span>
+                  </p>
+                  <p class="ml-auto d-flex flex-column text-right">
+                    <span class="text-success">
+                      <i class="fas fa-arrow-up"></i> 
+                    </span>
+                    <span class="text-muted">Current month</span>
+                  </p>
+                </div>
+                <!-- /.d-flex -->
+
+                <div class="position-relative mb-4">
+                  <canvas id="sales-chart-team" height="200"></canvas>
+                </div>
+
+                <div class="d-flex flex-row justify-content-end">
+                  <span class="mr-2">
+                    <i class="fas fa-square text-primary"></i> Completed
+                  </span>
+
+                  <span>
+                    <i class="fas fa-square text-danger"></i> Pending
+                  </span>
+                </div>
+              </div>
             </div>
-            <!-- /.card-body -->
+            <!-- /.card -->
+
+      </div>
+    </div>
+    @endhasanyrole
+   
+    <div class="row">
+      <div class="col-lg-6 col-6">
+        <div class="card card-success">
+          <div class="card-header border-0">
+            <div class="d-flex justify-content-between">
+              <h3 class="card-title">Your Monthly Goal</h3>             
+            </div>
           </div>
-          <!-- /.card -->
+        <div class="card-body">
+
+        <div class="progress-group">
+          Pending Orders
+          <span class="float-right"><b><?=$target['pending']?></b>/<?=$target['goal']?></span>
+          <div class="progress progress-sm">
+            <div class="progress-bar bg-danger" style="width: <?=$target['pending_per']?>%"></div>
+          </div>
+        </div>
+        <!-- /.progress-group -->
+
+        <div class="progress-group">
+          Completed Orders
+          <span class="float-right"><b><?=$target['completed']?></b>/<?=$target['goal']?></span>
+          <div class="progress progress-sm">
+            <div class="progress-bar bg-success" style="width: <?=$target['completed_per']?>%"></div>
+          </div>
+        </div>
+
+        </div>
+      </div>
+
       </div>
       <div class="col-lg-6 col-6">
-        <!-- PIE CHART -->
-        <div class="card card-danger">
-          <div class="card-header">
-            <h3 class="card-title">Orders Failed</h3>
-              <input type="hidden" id="docordst" value="{{$docRejected}}">
-              <input type="hidden" id="markordst" value="{{$markRejected}}">
-              <input type="hidden" id="durejordst" value="{{$duRejected}}">
-              <input type="hidden" id="rejordst" value="{{$rejectedords}}">
-
-            <div class="card-tools">
-              <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
-              </button>
-              <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
-            </div>
-          </div>
-          <div class="card-body">
-            <canvas id="pieChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-          </div>
-          <!-- /.card-body -->
-        </div>
+        
         <!-- /.card -->
       </div>
     </div>
+    
   </div>
 <!-- /.content -->
 </section>
 
 <script type="text/javascript">
-$(document).ready(function(){  
+$(document).ready(function(){ 
 
-      let op = parseInt($('#newordst').val()),
-        ld = parseInt($('#leadsordst').val()),
-        du = parseInt($('#duordst').val()),
-        ct = parseInt($('#createordst').val()),
-        dv = parseInt($('#deliveryordst').val()),
-        at = parseInt($('#compordst').val());
-    //-------------
-    //- DONUT CHART -
-    //-------------
-    // Get context with jQuery - using jQuery's .get() method.
-    var donutChartCanvas = $('#donutChart').get(0).getContext('2d')
-    var donutData        = {
-      labels: [
-          'Open', 
-          'Lead Created',
-          'Du Approved', 
-          'Order Created', 
-          'Item Delivered', 
-          'Activation', 
-      ],
-      datasets: [
-        {
-          data: [op,ld,du,ct,dv,at],
-          backgroundColor : ['#f56954', '#00a65a', '#f39c12', '#00c0ef', '#3c8dbc', '#d2d6de'],
-        }
-      ]
+  // AGENT GRAPH
+  var agentGraph = function(agdata){
+
+    var ticksStyle = {
+      fontColor: '#495057',
+      fontStyle: 'bold'
     }
-    var donutOptions     = {
-      maintainAspectRatio : false,
-      responsive : true,
-    }
-    //Create pie or douhnut chart
-    // You can switch between pie and douhnut using the method below.
-    var donutChart = new Chart(donutChartCanvas, {
-      type: 'doughnut',
-      data: donutData,
-      options: donutOptions      
-    })
-    /****************************************************************************/
-    let doc = parseInt($('#docordst').val())? parseInt($('#docordst').val()): 2,
-        mf = parseInt($('#markordst').val())? parseInt($('#markordst').val()): 1,
-        dr = parseInt($('#durejordst').val())?parseInt($('#durejordst').val()): 5,
-        rj = parseInt($('#rejordst').val())? parseInt($('#rejordst').val()):7 ;
-    //-------------
-    //- PIE CHART -
-    //-------------
-    var pieData  = {
-      labels: [
-          'Document Rejected', 
-          'Marketing Failed',
-          'Du Rejected', 
-          'Order Rejected',
-      ],
-      datasets: [
-        {
-          data: [doc,mf,dr,rj],
-          backgroundColor : ['#f56954', '#00a65a', '#f39c12', '#00c0ef'],
-        }
-      ]
-    }
-    // Get context with jQuery - using jQuery's .get() method.
-    var pieChartCanvas = $('#pieChart').get(0).getContext('2d')
-    var pieData        = pieData;
-    var pieOptions     = {
-      maintainAspectRatio : false,
-      responsive : true,
-    }
-    //Create pie or douhnut chart
-    // You can switch between pie and douhnut using the method below.
-    var pieChart = new Chart(pieChartCanvas, {
-      type: 'pie',
-      data: pieData,
-      options: pieOptions      
+
+    var mode      = 'index'
+    var intersect = true
+
+    var $salesChart = $('#sales-chart')
+
+    var labels = [], dataset1 = [], dataset2 = [];
+
+    $.each(agdata, function(index, items){
+        labels.push(items['agent'])
+        dataset1.push(items['completed'])
+        dataset2.push(items['pending'])
     })
 
-    /**********************************************************************************/
-    //--------------
-    //- AREA CHART -
-    //--------------
 
-    // Get context with jQuery - using jQuery's .get() method.
-    // var areaChartCanvas = $('#areaChart').get(0).getContext('2d')
+    var salesChart  = new Chart($salesChart, {
+      type   : 'bar',
+      data   : {
+        labels  : labels,
+        datasets: [
+          {
+            backgroundColor: '#007bff',
+            borderColor    : '#007bff',
+            data           : dataset1
+          },
+          {
+            backgroundColor: '#CD5C5C',
+            borderColor    : '#CD5C5C',
+            data           : dataset2
+          }
+        ]
+      },
+    options: {
+      maintainAspectRatio: false,
+      tooltips           : {
+        mode     : mode,
+        intersect: intersect
+      },
+      hover              : {
+        mode     : mode,
+        intersect: intersect
+      },
+      legend             : {
+        display: false
+      },
+      scales             : {
+        yAxes: [{
+          // display: false,
+          gridLines: {
+            display      : true,
+            lineWidth    : '4px',
+            color        : 'rgba(0, 0, 0, .2)',
+            zeroLineColor: 'transparent'
+          },
+          ticks    : $.extend({
+            beginAtZero: true,
+            min: 0,
+            max: 22000,
+            stepSize: 2000,
 
-    // var areaChartData = {
-    //   labels  : ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-    //   datasets: [
-    //     {
-    //       label               : 'Digital Goods',
-    //       backgroundColor     : 'rgba(60,141,188,0.9)',
-    //       borderColor         : 'rgba(60,141,188,0.8)',
-    //       pointRadius          : false,
-    //       pointColor          : '#3b8bba',
-    //       pointStrokeColor    : 'rgba(60,141,188,1)',
-    //       pointHighlightFill  : '#fff',
-    //       pointHighlightStroke: 'rgba(60,141,188,1)',
-    //       data                : [28, 48, 40, 19, 86, 27, 90, 99]
-    //     },
-    //   ]
-    // }
+            // Include a dollar sign in the ticks
+            callback: function (value, index, values) {
+              
+              if (value >= 1000) {
+                value /= 1000
+                value += 'k'
+              }
+              return  value
+            }
+          }, ticksStyle)
+        }],
+        xAxes: [{
+          display  : true,
+          gridLines: {
+            display: false
+          },
+          ticks    : ticksStyle
+        }]
+      }
+    }
+  });
+  }; 
 
-    // var areaChartOptions = {
-    //   maintainAspectRatio : false,
-    //   responsive : true,
-    //   legend: {
-    //     display: false
-    //   },
-    //   scales: {
-    //     xAxes: [{
-    //       gridLines : {
-    //         display : false,
-    //       }
-    //     }],
-    //     yAxes: [{
-    //       gridLines : {
-    //         display : false,
-    //       }
-    //     }]
-    //   }
-    // }
+  // TEAM GRAPH
+  var teamGraph = function(agdata){
 
-    // // This will get the first returned node in the jQuery collection.
-    // var areaChart  = new Chart(areaChartCanvas, { 
-    //   type: 'line',
-    //   data: areaChartData, 
-    //   options: areaChartOptions
-    // })
+    var ticksStyle = {
+      fontColor: '#495057',
+      fontStyle: 'bold'
+    }
+
+    var mode      = 'index'
+    var intersect = true
+
+    var $salesChart = $('#sales-chart-team')
+
+    var labels = [], dataset1 = [], dataset2 = [];
+
+    $.each(agdata, function(index, items){
+        labels.push(items['team'])
+        dataset1.push(items['completed'])
+        dataset2.push(items['pending'])
+    })
+
+
+    var salesChart  = new Chart($salesChart, {
+      type   : 'bar',
+      data   : {
+        labels  : labels,
+        datasets: [
+          {
+            backgroundColor: '#007bff',
+            borderColor    : '#007bff',
+            data           : dataset1
+          },
+          {
+            backgroundColor: '#CD5C5C',
+            borderColor    : '#CD5C5C',
+            data           : dataset2
+          }
+        ]
+      },
+    options: {
+      maintainAspectRatio: false,
+      tooltips           : {
+        mode     : mode,
+        intersect: intersect
+      },
+      hover              : {
+        mode     : mode,
+        intersect: intersect
+      },
+      legend             : {
+        display: false
+      },
+      scales             : {
+        yAxes: [{
+          // display: false,
+          gridLines: {
+            display      : true,
+            lineWidth    : '4px',
+            color        : 'rgba(0, 0, 0, .2)',
+            zeroLineColor: 'transparent'
+          },
+          ticks    : $.extend({
+            beginAtZero: true,
+            min: 0,
+            max: 35000,
+            stepSize: 5000,
+
+            // Include a dollar sign in the ticks
+            callback: function (value, index, values) {
+              
+              if (value >= 1000) {
+                value /= 1000
+                value += 'k'
+              }
+              return  value
+            }
+          }, ticksStyle)
+        }],
+        xAxes: [{
+          display  : true,
+          gridLines: {
+            display: false
+          },
+          ticks    : ticksStyle
+        }]
+      }
+    }
+  });
+  }; 
+
+  $.ajaxSetup({
+      headers: {
+          'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+      }
+  });
+
+  $.ajax({
+      url:"{{ route('agentdata') }}",
+      method:"GET",
+      dataType:'JSON',
+      contentType: false,
+      cache: false,
+      processData: false,  
+      success:function(data){
+        if(data.success){
+         
+          let agent = JSON.parse(data.agentdata); 
+          agentGraph(agent);
+
+          let team = JSON.parse(data.teamdata); 
+          teamGraph(team);
+
+        }
+
+      }
+  });
+
 
 });    
 </script>

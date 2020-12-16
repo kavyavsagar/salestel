@@ -7,6 +7,10 @@
 .mht-100{
 	max-height: 150px;
 }
+.help-block{
+	color : #ff0000;
+	margin-left: 0.2rem;
+}
 .table-hover tbody tr:hover {
     background-color: #cfdae8;
 }
@@ -21,7 +25,9 @@
 .auto-comp li:hover{
 	background: #eee;
 }
-
+.revenue h4{
+	font-weight: 600;
+}
 @media all and (display-mode: standalone) {
   body {
     background-color: yellow;

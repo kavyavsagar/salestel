@@ -20,12 +20,9 @@ class CreateOrdersTable extends Migration
             $table->enum('plan_type', ['fixed', 'mobile']);
             $table->integer('total_amount')->default(0);
             $table->integer('order_status_id')->default(0);
-            $table->date('activation_date')->nullable();            
-            $table->enum('sales_priority', ['hot', 'warm', 'cold']);
-            $table->date('exp_closing_date')->nullable();
-            $table->integer('exp_revenue')->nullable();            
+            $table->date('activation_date')->nullable();  
             $table->timestamps();
-
+            
             $table->foreign('customer_id')
                 ->references('id')
                 ->on('customers')

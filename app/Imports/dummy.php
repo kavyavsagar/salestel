@@ -1,24 +1,49 @@
 <?php
  public createCustomer($row){
 
-        if(isset($row['account_no']) && $row['account_no']){   
+        if(isset($row['account_no']) && $row['account_no']){  
+
             $cExists = Customer::where('account_no', $row['account_no'])->count();
 
-            if(!$cExists){
+            if(!$cExists){  
+                $mobile1 = ''; $mobile2= '';
+                if(isset($row['mobile_number']) ){
+                    $mob = explode('/', trim($row['mobile_number']) );                   
+                    $mobile1 = (isset($mob[0]))? trim($mob[0]): '';
+                    $mobile2 = (isset($mob[1]))? trim($mob[1]) : '';
+                }
+                $name1 = ''; $name2= '';
+                if(isset($row['customer_name']) ){
+                    $nam = ucwords(strtolower(trim($row['customer_name'])));
+                    $nam = explode('/',  $nam);                   
+                    $name1 = (isset($nam[0]))? trim($nam[0]): '';
+                    $name2 = (isset($nam[1]))? trim($nam[1]): '';
+                }
+              
+                $email1 = ''; $email2= '';
+                if(isset($row['email_address'])){
+                    $mail = strtolower(trim($row['email_address']));
+                    $mail = explode('/',  $mail);    
+                    $email1 = (isset($mail[0]))? trim($mail[0]): '';
+                    $email2 = (isset($mail[1]))? trim($mail[1]) : '';
+                }
 
-                return new Customer([
-                            'company_name'     => isset($row['company_name'])?$row['company_name']: '',
-                            'account_no'       => isset($row['account_no'])?$row['account_no']: '',
-                            'authority_name'   => isset($row['customer_name'])?$row['customer_name']:'',
-                            'authority_email'  => isset($row['email_address'])?$row['email_address']: '', 
-                            'authority_phone'  => isset($row['mobile_number'])?$row['mobile_number']: '',
-                            'technical_name'   => '',
-                            'technical_email'  => '', 
-                            'technical_phone'  => '',
-                            'refferedby'       => auth()->user()->id,
-                            'status'           => 1
-                        ]); 
-            }
+                $insert = [
+                    'company_name'     => isset($row['company_name'])?ucwords(strtolower(trim($row['company_name']))): '',
+                    'account_no'       => isset($row['account_no'])? trim($row['account_no']): '',
+                    'authority_name'   => $name1,
+                    'authority_email'  => $email1, 
+                    'authority_phone'  => $mobile1,
+                    'technical_name'   => $name2,
+                    'technical_email'  => $email2, 
+                    'technical_phone'  => $mobile2,
+                    'refferedby'       => auth()->user()->id,
+                    'status'           => 1
+                    ];
+                 
+                return new Customer($insert); 
+            }           
+
         }
 
         return false;
@@ -30,28 +55,27 @@
             $customer = Customer::where('account_no', $row['account_no'])->first();
 
             if(!trim($row['gsm_total'])){
-                 return null;
+                return null;
             }
-            $order_insert = ["customer_id" => $customer->id,
-                        "plan_type" => 'mobile',
-                        "total_amount" => trim($row['gsm_total']),
-                        "order_status_id" => 13
+            $order_insert = ["customer_id"      => $customer->id,
+                            "plan_type"         => 'mobile',
+                            "total_amount"      => trim($row['gsm_total']),
+                            "order_status_id"   => 13
                     ];
 
             #### Order Insert
             $order =  Order::create($order_insert); 
 
-             #### Order Status History
+            #### Order Status History
             $status_insert = [
-                        "order_id"        => $order->id,
-                        "order_status_id" => 13,
-                        "comments"        => (isset($row['status']) &&  $row['status'])? $row['status']: 'Retention Order',
-                        "added_by"        => auth()->user()->id
-                    ];
+                    "order_id"        => $order->id,
+                    "order_status_id" => 13,
+                    "comments"        => (isset($row['status']) &&  $row['status'])? trim($row['status']): 'Retention Order',
+                    "added_by"        => auth()->user()->id
+                ];
 
             return new OrderHistory($status_insert); 
-
-        }    
+        }      
     }
 
   
@@ -304,5 +328,38 @@
             //                         "total"      => ($q * $p)
             //                     ];
             //     //$res = OrderPlan::create($plan_insert);
+            // }
+
+    
+            // if(!trim($row['gsm_total'])){
+            //     return null;
+            // }
+
+            // $order = DB::table('orders')
+            //         ->join('customers', 'customers.id', '=', 'orders.customer_id')
+            //         ->select('orders.*')
+            //         ->where('customers.account_no', '=', $row['account_no'])
+            //         ->first(); 
+
+            // #### Order Plans  
+            // $plan_insert = []; $res = '';
+
+            // if(trim($row["data_100gb_600"]) != null && trim($row["data_100gb_600"]) >0 ){
+            //     $q = (int) trim($row["data_100gb_600"]);
+            //     $p = 600;
+
+            //     $plan_insert = [
+            //                         "order_id"   => $order->id,
+            //                         "price"      => $p,
+            //                         "plan"       => "data 100gb",
+            //                         "plan_id"    => 4,
+            //                         "plan_type"  => 'MNP',    
+            //                         "quantity"   => $q,
+            //                         "total"      => ($q * $p)
+            //                     ];
+              
+            //     return new OrderPlan($plan_insert);
+            // }else{
+            //     return null;
             // }
 ?>
